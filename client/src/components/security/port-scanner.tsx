@@ -89,19 +89,19 @@ export function PortScanner() {
 
   return (
     <Card className="bg-card border border-border">
-      <CardContent className="p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 bg-chart-3/10 rounded-lg flex items-center justify-center">
-            <Network className="text-chart-3 text-xl" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-chart-3/10 rounded-lg flex items-center justify-center">
+            <Network className="text-chart-3 text-lg sm:text-xl" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Port Scanner</h3>
-            <p className="text-sm text-muted-foreground">Scan network ports and identify running services</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold">Port Scanner</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Scan network ports and identify running services</p>
           </div>
         </div>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="target-input" className="block text-sm font-medium mb-2">
                 Target IP/Domain
@@ -132,7 +132,7 @@ export function PortScanner() {
             </div>
           </div>
 
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             <Button
               onClick={handleFullScan}
               disabled={!target.trim() || isScanning}
@@ -140,16 +140,19 @@ export function PortScanner() {
               data-testid="button-full-scan"
             >
               <Play className="mr-2 h-4 w-4" />
-              {scanPortsMutation.isPending ? "Scanning..." : "Start Scan"}
+              <span className="hidden sm:inline">{scanPortsMutation.isPending ? "Scanning..." : "Start Scan"}</span>
+              <span className="sm:hidden">{scanPortsMutation.isPending ? "Scanning..." : "Scan"}</span>
             </Button>
             <Button
               variant="secondary"
               onClick={handleQuickScan}
               disabled={!target.trim() || isScanning}
+              className="flex-1 sm:flex-none"
               data-testid="button-quick-scan"
             >
               <Zap className="mr-2 h-4 w-4" />
-              {quickScanMutation.isPending ? "Scanning..." : "Quick Scan"}
+              <span className="hidden sm:inline">{quickScanMutation.isPending ? "Scanning..." : "Quick Scan"}</span>
+              <span className="sm:hidden">{quickScanMutation.isPending ? "Scanning..." : "Quick"}</span>
             </Button>
           </div>
 

@@ -74,14 +74,14 @@ export function PhishingDetector() {
 
   return (
     <Card className="bg-card border border-border">
-      <CardContent className="p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
-            <Fish className="text-destructive text-xl" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-destructive/10 rounded-lg flex items-center justify-center">
+            <Fish className="text-destructive text-lg sm:text-xl" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Phishing URL Detection</h3>
-            <p className="text-sm text-muted-foreground">Detect malicious URLs and phishing attempts</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold">Phishing URL Detection</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Detect malicious URLs and phishing attempts</p>
           </div>
         </div>
 
@@ -108,13 +108,14 @@ export function PhishingDetector() {
             data-testid="button-analyze-url"
           >
             <Search className="mr-2 h-4 w-4" />
-            {analyzeUrlMutation.isPending ? "Analyzing..." : "Analyze URL"}
+            <span className="hidden sm:inline">{analyzeUrlMutation.isPending ? "Analyzing..." : "Analyze URL"}</span>
+            <span className="sm:hidden">{analyzeUrlMutation.isPending ? "Analyzing..." : "Analyze"}</span>
           </Button>
 
           {analysis && (
             <>
               {/* Analysis Results */}
-              <div className="bg-secondary p-4 rounded-lg">
+              <div className="bg-secondary p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium">Security Assessment</h4>
                   <Badge className={`${getRiskColor(analysis.risk)} flex items-center space-x-1`}>
@@ -170,7 +171,7 @@ export function PhishingDetector() {
               </div>
 
               {/* Detailed Analysis */}
-              <div className="bg-muted p-4 rounded-lg">
+              <div className="bg-muted p-3 sm:p-4 rounded-lg">
                 <h4 className="font-medium mb-2 flex items-center">
                   <Info className="mr-2 h-4 w-4" />
                   Analysis Details
@@ -184,7 +185,7 @@ export function PhishingDetector() {
 
               {/* Recommendations */}
               {analysis.recommendations.length > 0 && (
-                <div className="bg-muted p-4 rounded-lg">
+                <div className="bg-muted p-3 sm:p-4 rounded-lg">
                   <h4 className="font-medium mb-2 flex items-center">
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Recommendations
