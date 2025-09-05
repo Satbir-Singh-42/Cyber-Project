@@ -130,13 +130,13 @@ export function PasswordAnalyzer() {
       case 'weak': return 'text-orange-500';
       case 'medium': return 'text-yellow-500';
       case 'strong': return 'text-accent';
-      case 'very-strong': return 'text-green-500';
+      case 'very-strong': return 'text-primary';
       default: return 'text-muted-foreground';
     }
   };
 
   const getProgressColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
+    if (score >= 80) return 'bg-primary';
     if (score >= 60) return 'bg-accent';
     if (score >= 40) return 'bg-yellow-500';
     if (score >= 20) return 'bg-orange-500';
