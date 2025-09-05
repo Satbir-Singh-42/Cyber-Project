@@ -8,22 +8,22 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration
+// Session configuration  
 const pgStore = connectPg(session);
 app.use(session({
   store: new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
-    tableName: 'session', // Use different table name to avoid conflicts
+    tableName: 'user_sessions', // Completely different table name
   }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  name: 'sessionId',
+  name: 'connect.sid',
   cookie: {
-    secure: false, // Allow over HTTP in development
+    secure: false, 
     httpOnly: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
   },
 }));
