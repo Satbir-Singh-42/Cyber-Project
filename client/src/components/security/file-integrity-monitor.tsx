@@ -52,9 +52,14 @@ export function FileIntegrityMonitor() {
       });
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to initialize baseline";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Initialization Failed",
-        description: error.message || "Failed to initialize baseline",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -81,9 +86,14 @@ export function FileIntegrityMonitor() {
       }
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to check file integrity";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Integrity Check Failed",
-        description: error.message || "Failed to check file integrity",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -101,9 +111,14 @@ export function FileIntegrityMonitor() {
       });
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to update baseline";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update baseline",
+        description: errorMessage,
         variant: "destructive",
       });
     },

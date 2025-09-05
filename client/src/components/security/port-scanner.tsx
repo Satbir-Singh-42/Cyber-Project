@@ -44,9 +44,14 @@ export function PortScanner() {
       });
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to scan ports";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Scan Failed",
-        description: error.message || "Failed to scan ports",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -65,9 +70,14 @@ export function PortScanner() {
       });
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to perform quick scan";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Quick Scan Failed",
-        description: error.message || "Failed to perform quick scan",
+        description: errorMessage,
         variant: "destructive",
       });
     },

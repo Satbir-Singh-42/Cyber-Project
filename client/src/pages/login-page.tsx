@@ -88,9 +88,14 @@ export default function LoginPage() {
       }, 100);
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Invalid email or password. Please try again.";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid email or password. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },

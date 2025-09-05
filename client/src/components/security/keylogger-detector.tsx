@@ -54,9 +54,14 @@ export function KeyloggerDetector() {
       }
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to scan for keyloggers";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Scan Failed",
-        description: error.message || "Failed to scan for keyloggers",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -84,9 +89,14 @@ export function KeyloggerDetector() {
       }
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to terminate process";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Termination Failed",
-        description: error.message || "Failed to terminate process",
+        description: errorMessage,
         variant: "destructive",
       });
     },

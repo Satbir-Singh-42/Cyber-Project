@@ -113,9 +113,14 @@ export function PasswordAnalyzer() {
       setAnalysis(data);
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to analyze password";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Analysis Failed",
-        description: error.message || "Failed to analyze password",
+        description: errorMessage,
         variant: "destructive",
       });
     },

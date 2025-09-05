@@ -102,9 +102,14 @@ export default function SignupPage() {
       }, 100);
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to create account. Please try again.";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\\d+:\\s*/, ''); // Remove status codes
+      }
       toast({
-        title: "Signup Failed",
-        description: error.message || "Failed to create account. Please try again.",
+        title: "Registration Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     },

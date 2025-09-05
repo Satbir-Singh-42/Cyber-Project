@@ -38,9 +38,14 @@ export function PhishingDetector() {
       setAnalysis(data);
     },
     onError: (error: any) => {
+      // Extract clean error message
+      let errorMessage = "Failed to analyze URL";
+      if (error?.message) {
+        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
+      }
       toast({
         title: "Analysis Failed",
-        description: error.message || "Failed to analyze URL",
+        description: errorMessage,
         variant: "destructive",
       });
     },
