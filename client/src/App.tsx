@@ -11,7 +11,6 @@ import PortScannerPage from "@/pages/port-scanner-page";
 import KeyloggerDetectorPage from "@/pages/keylogger-detector-page";
 import FileIntegrityPage from "@/pages/file-integrity-page";
 import HistoryPage from "@/pages/history-page";
-import SettingsPage from "@/pages/settings-page";
 import LoginPage from "@/pages/login-page";
 import SignupPage from "@/pages/signup-page";
 import NotFound from "@/pages/not-found";
@@ -57,11 +56,6 @@ function Router() {
       <Route path="/history">
         <Layout>
           <HistoryPage />
-        </Layout>
-      </Route>
-      <Route path="/settings">
-        <Layout>
-          <SettingsPage />
         </Layout>
       </Route>
       <Route>

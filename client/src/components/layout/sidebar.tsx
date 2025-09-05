@@ -9,7 +9,6 @@ import {
   FilePen, 
   History, 
   Home,
-  Settings,
   ChevronLeft,
   ChevronRight,
   X
@@ -150,26 +149,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         })}
       </nav>
 
-      {/* Settings */}
-      <div className="p-4 border-t border-border">
-        <Link href="/settings">
-          <div
-            className={cn(
-              "flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",
-              "hover:bg-secondary/80 text-foreground"
-            )}
-            data-testid="nav-settings"
-          >
-            <Settings className="h-4 w-4" />
-            {!collapsed && (
-              <div className="flex-1">
-                <div className="font-medium text-sm">Settings</div>
-                <div className="text-xs text-muted-foreground">Configure toolkit</div>
-              </div>
-            )}
-          </div>
-        </Link>
-      </div>
     </div>
     
     {/* Mobile sidebar */}
@@ -236,22 +215,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Mobile Settings */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <Link href="/settings">
-            <div
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white"
-              onClick={onClose}
-              data-testid="nav-mobile-settings"
-            >
-              <Settings className="h-4 w-4" />
-              <div className="flex-1">
-                <div className="font-medium text-sm">Settings</div>
-                <div className="text-xs text-gray-600 dark:text-gray-400">Configure toolkit</div>
-              </div>
-            </div>
-          </Link>
-        </div>
       </div>
     )}
     </>
