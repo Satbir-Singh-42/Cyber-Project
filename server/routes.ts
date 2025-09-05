@@ -10,8 +10,10 @@ import {
   passwordAnalysisRequestSchema,
   phishingAnalysisRequestSchema,
   portScanRequestSchema,
-  fileMonitorRequestSchema
+  fileMonitorRequestSchema,
+  signupRequestSchema
 } from "@shared/schema";
+import bcrypt from "bcrypt";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const passwordService = new PasswordService();
@@ -19,6 +21,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const portService = new PortService();
   const keyloggerService = new KeyloggerService();
   const fileIntegrityService = new FileIntegrityService();
+
+  // User Registration
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { name, email, password } = signupRequestSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUserByEmail = await storage.getUserByEmail(email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Use email as username for simplicity
+      const existingUserByUsername = await storage.getUserByUsername(email);
+      if (existingUserByUsername) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+
+      // Hash password
+      const saltRounds = 12;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      // Create user
+      const newUser = await storage.createUser({
+        username: email, // Using email as username
+        email,
+        name,
+        password: hashedPassword,
+      });
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      res.status(201).json({ 
+        message: "Account created successfully", 
+        user: userWithoutPassword 
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        return res.status(400).json({ message: firstError.message });
+      }
+      console.error("Signup error:", error);
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
 
   // Password Analysis - Works for both guest and authenticated users
   app.post("/api/security/password-analysis", async (req, res) => {

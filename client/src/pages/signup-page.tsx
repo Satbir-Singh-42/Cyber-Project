@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -62,6 +65,8 @@ const securityTools = [
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -73,9 +78,35 @@ export default function SignupPage() {
     },
   });
 
+  const signupMutation = useMutation({
+    mutationFn: async (data: SignupForm) => {
+      const response = await apiRequest('POST', '/api/auth/signup', {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Account Created!",
+        description: `Welcome ${data.user.name}! Your account has been created successfully.`,
+      });
+      // Redirect to login page
+      setLocation('/login');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Signup Failed",
+        description: error.message || "Failed to create account. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: SignupForm) => {
-    console.log('Signup attempt:', data);
-    // TODO: Implement actual signup logic
+    signupMutation.mutate(data);
   };
 
   return (
@@ -235,9 +266,10 @@ export default function SignupPage() {
                   <Button 
                     type="submit" 
                     className="w-full"
+                    disabled={signupMutation.isPending}
                     data-testid="button-signup"
                   >
-                    Create Account
+                    {signupMutation.isPending ? "Creating Account..." : "Create Account"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>

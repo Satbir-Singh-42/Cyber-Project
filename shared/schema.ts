@@ -17,7 +17,10 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
   password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const scanResults = pgTable("scan_results", {
@@ -40,7 +43,19 @@ export const monitoredFiles = pgTable("monitored_files", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
+  name: true,
   password: true,
+});
+
+export const signupRequestSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export const insertScanResultSchema = createInsertSchema(scanResults).pick({
@@ -87,3 +102,4 @@ export type PasswordAnalysisRequest = z.infer<typeof passwordAnalysisRequestSche
 export type PhishingAnalysisRequest = z.infer<typeof phishingAnalysisRequestSchema>;
 export type PortScanRequest = z.infer<typeof portScanRequestSchema>;
 export type FileMonitorRequest = z.infer<typeof fileMonitorRequestSchema>;
+export type SignupRequest = z.infer<typeof signupRequestSchema>;
