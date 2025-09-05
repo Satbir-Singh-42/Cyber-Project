@@ -9,6 +9,72 @@ import { Eye, EyeOff, Key, Check, X, Lightbulb } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
+// Temporary client-side password analysis
+function analyzePasswordClientSide(password: string): PasswordAnalysis {
+  const criteria = {
+    length: password.length >= 8,
+    specialChars: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    numbers: /\d/.test(password),
+    upperCase: /[A-Z]/.test(password),
+    lowerCase: /[a-z]/.test(password),
+    noDictionaryWords: !/(password|123456|qwerty|abc123|admin|login|welcome)/.test(password.toLowerCase())
+  };
+
+  let score = 0;
+  if (password.length >= 12) score += 25;
+  else if (password.length >= 8) score += 15;
+  else if (password.length >= 6) score += 10;
+
+  if (criteria.upperCase) score += 10;
+  if (criteria.lowerCase) score += 10;
+  if (criteria.numbers) score += 10;
+  if (criteria.specialChars) score += 15;
+  if (!criteria.noDictionaryWords) score -= 20;
+
+  const charsetSize = 
+    (criteria.lowerCase ? 26 : 0) +
+    (criteria.upperCase ? 26 : 0) +
+    (criteria.numbers ? 10 : 0) +
+    (criteria.specialChars ? 32 : 0);
+  
+  const entropy = Math.log2(Math.pow(charsetSize, password.length));
+  if (entropy >= 60) score += 20;
+  else if (entropy >= 50) score += 15;
+  else if (entropy >= 40) score += 10;
+
+  score = Math.max(0, Math.min(100, score));
+
+  const strength = score >= 80 ? 'very-strong' : 
+                  score >= 60 ? 'strong' :
+                  score >= 40 ? 'medium' :
+                  score >= 20 ? 'weak' : 'very-weak';
+
+  const suggestions: string[] = [];
+  if (!criteria.length) suggestions.push('Use at least 8 characters (12+ recommended)');
+  if (!criteria.upperCase) suggestions.push('Add uppercase letters (A-Z)');
+  if (!criteria.lowerCase) suggestions.push('Add lowercase letters (a-z)');
+  if (!criteria.numbers) suggestions.push('Include numbers (0-9)');
+  if (!criteria.specialChars) suggestions.push('Add special characters (!@#$%^&*)');
+  if (!criteria.noDictionaryWords) suggestions.push('Avoid common words and phrases');
+
+  const attempts = Math.pow(2, entropy) / 2;
+  const seconds = attempts / 1e10;
+  const crackTime = seconds < 60 ? 'Less than a minute' :
+                   seconds < 3600 ? `${Math.ceil(seconds / 60)} minutes` :
+                   seconds < 86400 ? `${Math.ceil(seconds / 3600)} hours` :
+                   seconds < 2592000 ? `${Math.ceil(seconds / 86400)} days` :
+                   `${Math.ceil(seconds / 2592000)} months`;
+
+  return {
+    score,
+    strength: strength as PasswordAnalysis['strength'],
+    criteria,
+    entropy: Math.round(entropy),
+    suggestions,
+    crackTime
+  };
+}
+
 interface PasswordAnalysis {
   score: number;
   strength: 'very-weak' | 'weak' | 'medium' | 'strong' | 'very-strong';
@@ -33,8 +99,8 @@ export function PasswordAnalyzer() {
 
   const analyzePasswordMutation = useMutation({
     mutationFn: async (password: string) => {
-      const response = await apiRequest('POST', '/api/security/password-analysis', { password });
-      return response.json();
+      // Temporary client-side analysis while database is being fixed
+      return analyzePasswordClientSide(password);
     },
     onSuccess: (data) => {
       setAnalysis(data);
