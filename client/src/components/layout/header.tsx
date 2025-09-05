@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, LogIn } from "lucide-react";
+import { Shield, Menu, LogIn, LogOut, User } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
+  const { user, isAuthenticated, isGuest, logout, isLoggingOut } = useAuth();
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
@@ -41,30 +43,65 @@ export function Header({ onMenuClick }: HeaderProps) {
           
           <div className="flex items-center space-x-2 sm:space-x-4">
             
-            {/* Guest Mode Badge */}
-            <div className="hidden sm:flex items-center bg-muted px-3 py-1 rounded-full">
-              <span className="text-xs font-medium text-muted-foreground">Guest Mode</span>
-            </div>
-            
-            {/* Auth Buttons */}
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                <LogIn className="mr-2 h-4 w-4" />
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/signup">
-              <Button size="sm" className="hidden sm:flex">
-                Sign Up
-              </Button>
-            </Link>
-            
-            {/* Mobile auth button */}
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="sm:hidden p-2">
-                <LogIn className="h-4 w-4" />
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                {/* User Info */}
+                <div className="hidden sm:flex items-center bg-primary/10 px-3 py-1 rounded-full">
+                  <User className="mr-2 h-3 w-3 text-primary" />
+                  <span className="text-xs font-medium text-primary">{user?.name}</span>
+                </div>
+                
+                {/* Logout Button */}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hidden sm:flex"
+                  onClick={logout}
+                  disabled={isLoggingOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {isLoggingOut ? "Signing Out..." : "Sign Out"}
+                </Button>
+                
+                {/* Mobile logout button */}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="sm:hidden p-2"
+                  onClick={logout}
+                  disabled={isLoggingOut}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : isGuest ? (
+              <>
+                {/* Guest Mode Badge */}
+                <div className="hidden sm:flex items-center bg-muted px-3 py-1 rounded-full">
+                  <span className="text-xs font-medium text-muted-foreground">Guest Mode</span>
+                </div>
+                
+                {/* Auth Buttons */}
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="hidden sm:flex">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button size="sm" className="hidden sm:flex">
+                    Sign Up
+                  </Button>
+                </Link>
+                
+                {/* Mobile auth button */}
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="sm:hidden p-2">
+                    <LogIn className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </>
+            ) : null}
             
           </div>
         </div>

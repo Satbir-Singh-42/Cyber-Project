@@ -11,7 +11,8 @@ import {
   phishingAnalysisRequestSchema,
   portScanRequestSchema,
   fileMonitorRequestSchema,
-  signupRequestSchema
+  signupRequestSchema,
+  loginRequestSchema
 } from "@shared/schema";
 import bcrypt from "bcrypt";
 
@@ -67,6 +68,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = loginRequestSchema.parse(req.body);
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Create session
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+      };
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = user;
+      res.json({ 
+        message: "Login successful", 
+        user: userWithoutPassword 
+      });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        const firstError = error.errors[0];
+        return res.status(400).json({ message: firstError.message });
+      }
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
+  // User Logout
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.json({ message: "Logout successful" });
+    });
+  });
+
+  // Get current user
+  app.get("/api/auth/user", (req, res) => {
+    const user = (req.session as any)?.user;
+    if (!user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json(user);
+  });
+
+  // Authentication middleware
+  const requireAuth = (req: any, res: any, next: any) => {
+    const user = req.session?.user;
+    if (!user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    req.user = user;
+    next();
+  };
+
   // Password Analysis - Works for both guest and authenticated users
   app.post("/api/security/password-analysis", async (req, res) => {
     try {
@@ -74,17 +147,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const analysis = passwordService.analyzePassword(password);
       
       // Store result only if user is authenticated
-      // For guests, just return the analysis without storing
-      try {
-        await storage.createScanResult({
-          type: 'password',
-          target: 'password-analysis',
-          result: JSON.stringify(analysis),
-          score: analysis.score
-        });
-      } catch (dbError) {
-        // If database fails, still return analysis for guest mode
-        console.log('Database storage failed, continuing in guest mode');
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'password',
+            target: 'password-analysis',
+            result: JSON.stringify(analysis),
+            score: analysis.score,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
       }
 
       res.json(analysis);
@@ -99,13 +174,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { url } = phishingAnalysisRequestSchema.parse(req.body);
       const analysis = phishingService.analyzeUrl(url);
       
-      // Store result
-      await storage.createScanResult({
-        type: 'phishing',
-        target: url,
-        result: JSON.stringify(analysis),
-        score: analysis.score
-      });
+      // Store result for authenticated users
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'phishing',
+            target: url,
+            result: JSON.stringify(analysis),
+            score: analysis.score,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
+      }
 
       res.json(analysis);
     } catch (error: any) {
@@ -119,13 +202,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { target, portRange } = portScanRequestSchema.parse(req.body);
       const result = await portService.scanPorts(target, portRange);
       
-      // Store result
-      await storage.createScanResult({
-        type: 'port',
-        target,
-        result: JSON.stringify(result),
-        score: result.openPorts.length
-      });
+      // Store result for authenticated users
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'port',
+            target,
+            result: JSON.stringify(result),
+            score: result.openPorts.length,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
+      }
 
       res.json(result);
     } catch (error: any) {
@@ -143,13 +234,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await portService.quickScan(target);
       
-      // Store result
-      await storage.createScanResult({
-        type: 'port',
-        target,
-        result: JSON.stringify(result),
-        score: result.openPorts.length
-      });
+      // Store result for authenticated users
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'port',
+            target,
+            result: JSON.stringify(result),
+            score: result.openPorts.length,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
+      }
 
       res.json(result);
     } catch (error: any) {
@@ -241,15 +340,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get scan history - Returns empty array for guests, full history for authenticated users
+  // Get scan history - Returns user-specific data for authenticated users, empty for guests
   app.get("/api/security/scan-history", async (req, res) => {
     try {
       const { type } = req.query;
-      const results = await storage.getScanResults(type as string);
-      res.json(results);
+      const user = (req.session as any)?.user;
+      
+      if (user) {
+        // Return user-specific scan results
+        const results = await storage.getUserScanResults(user.id, type as string);
+        res.json(results);
+      } else {
+        // Return empty array for guest users
+        res.json([]);
+      }
     } catch (error: any) {
-      // Return empty array for guest mode if database fails
-      console.log('Database query failed, returning empty results for guest mode');
+      // Return empty array if database fails
+      console.log('Database query failed, returning empty results');
       res.json([]);
     }
   });

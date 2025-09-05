@@ -16,6 +16,7 @@ import {
   Clock,
   ArrowRight
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ScanResult {
   id: string;
@@ -27,6 +28,8 @@ interface ScanResult {
 }
 
 export default function Dashboard() {
+  const { isAuthenticated, user, isGuest } = useAuth();
+  
   const { data: scanResults = [] } = useQuery<ScanResult[]>({
     queryKey: ['/api/security/scan-history'],
   });
@@ -86,10 +89,26 @@ export default function Dashboard() {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Security Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {isAuthenticated ? `Welcome back, ${user?.name}` : 'Security Dashboard'}
+        </h1>
         <p className="text-muted-foreground mt-2">
-          Comprehensive cybersecurity toolkit for threat detection and system analysis
+          {isAuthenticated 
+            ? "Your personal cybersecurity toolkit with saved scan history and analytics"
+            : "Comprehensive cybersecurity toolkit for threat detection and system analysis"
+          }
         </p>
+        {isGuest && (
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <span className="text-sm font-medium">Guest Mode</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              You're using the toolkit as a guest. <Link href="/signup" className="text-primary hover:underline">Create an account</Link> to save your scan results and access advanced features.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats Overview */}

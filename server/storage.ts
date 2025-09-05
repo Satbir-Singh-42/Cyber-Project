@@ -1,6 +1,6 @@
 import { type User, type InsertUser, type ScanResult, type InsertScanResult, type MonitoredFile, type InsertMonitoredFile, users, scanResults, monitoredFiles } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -11,6 +11,7 @@ export interface IStorage {
   
   createScanResult(scanResult: InsertScanResult): Promise<ScanResult>;
   getScanResults(type?: string): Promise<ScanResult[]>;
+  getUserScanResults(userId: string, type?: string): Promise<ScanResult[]>;
   
   createMonitoredFile(file: InsertMonitoredFile): Promise<MonitoredFile>;
   getMonitoredFiles(): Promise<MonitoredFile[]>;
@@ -58,6 +59,16 @@ export class DatabaseStorage implements IStorage {
     const results = type 
       ? await query.where(eq(scanResults.type, type))
       : await query;
+    
+    return results.sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
+  }
+
+  async getUserScanResults(userId: string, type?: string): Promise<ScanResult[]> {
+    const whereCondition = type 
+      ? and(eq(scanResults.userId, userId), eq(scanResults.type, type))
+      : eq(scanResults.userId, userId);
+    
+    const results = await db.select().from(scanResults).where(whereCondition);
     
     return results.sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
   }

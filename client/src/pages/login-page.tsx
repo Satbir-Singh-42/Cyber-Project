@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -52,6 +55,9 @@ const securityFeatures = [
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -61,9 +67,35 @@ export default function LoginPage() {
     },
   });
 
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginForm) => {
+      const response = await apiRequest('POST', '/api/auth/login', {
+        email: data.email,
+        password: data.password,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Login Successful!",
+        description: `Welcome back, ${data.user.name}!`,
+      });
+      // Invalidate user query to refresh auth state
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      // Redirect to dashboard
+      setLocation('/');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid email or password. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: LoginForm) => {
-    console.log('Login attempt:', data);
-    // TODO: Implement actual login logic
+    loginMutation.mutate(data);
   };
 
   return (
@@ -162,9 +194,10 @@ export default function LoginPage() {
                   <Button 
                     type="submit" 
                     className="w-full"
+                    disabled={loginMutation.isPending}
                     data-testid="button-signin"
                   >
-                    Sign In
+                    {loginMutation.isPending ? "Signing In..." : "Sign In"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </form>

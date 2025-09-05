@@ -29,6 +29,7 @@ export const scanResults = pgTable("scan_results", {
   target: text("target").notNull(),
   result: text("result").notNull(), // JSON string
   score: integer("score"),
+  userId: varchar("user_id"), // Optional - null for guest scans
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
@@ -58,11 +59,17 @@ export const signupRequestSchema = z.object({
   path: ["confirmPassword"],
 });
 
+export const loginRequestSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
 export const insertScanResultSchema = createInsertSchema(scanResults).pick({
   type: true,
   target: true,
   result: true,
   score: true,
+  userId: true,
 });
 
 export const insertMonitoredFileSchema = createInsertSchema(monitoredFiles).pick({
@@ -103,3 +110,4 @@ export type PhishingAnalysisRequest = z.infer<typeof phishingAnalysisRequestSche
 export type PortScanRequest = z.infer<typeof portScanRequestSchema>;
 export type FileMonitorRequest = z.infer<typeof fileMonitorRequestSchema>;
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
+export type LoginRequest = z.infer<typeof loginRequestSchema>;
