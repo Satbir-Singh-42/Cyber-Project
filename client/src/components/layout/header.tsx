@@ -96,8 +96,9 @@ export function Header({ onMenuClick }: HeaderProps) {
                 
                 {/* Mobile auth button */}
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="sm:hidden p-2">
-                    <LogIn className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="sm:hidden">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
                   </Button>
                 </Link>
               </>
