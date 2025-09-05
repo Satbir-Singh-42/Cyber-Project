@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Shield, Menu } from "lucide-react";
 
 interface HeaderProps {
@@ -39,7 +40,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
-            {/* Empty space for future actions */}
+            <ThemeToggle />
           </div>
         </div>
       </div>
