@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -13,6 +14,41 @@ import {
 
 
 export default function Dashboard() {
+  const [systemStatus, setSystemStatus] = useState<'ready' | 'not-ready'>('ready');
+
+  // Simulate system status check
+  useEffect(() => {
+    const checkSystemStatus = () => {
+      // In a real app, this would check actual system health
+      // For demo purposes, we'll simulate changing status
+      const isReady = Math.random() > 0.3; // 70% chance of being ready
+      setSystemStatus(isReady ? 'ready' : 'not-ready');
+    };
+
+    checkSystemStatus();
+    // Check status every 30 seconds
+    const interval = setInterval(checkSystemStatus, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusDisplay = () => {
+    if (systemStatus === 'ready') {
+      return {
+        text: 'Ready',
+        textColor: 'text-green-500',
+        iconColor: 'text-green-500'
+      };
+    } else {
+      return {
+        text: 'Not Ready',
+        textColor: 'text-red-500', 
+        iconColor: 'text-red-500'
+      };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay();
 
   const securityTools = [
     {
@@ -75,9 +111,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">System Status</p>
-              <p className="text-3xl font-bold text-accent">Ready</p>
+              <p className={`text-3xl font-bold ${statusDisplay.textColor}`} data-testid="text-system-status">
+                {statusDisplay.text}
+              </p>
             </div>
-            <Shield className="h-8 w-8 text-accent" />
+            <Shield className={`h-8 w-8 ${statusDisplay.iconColor}`} />
           </div>
         </CardContent>
       </Card>
