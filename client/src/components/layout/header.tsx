@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Download, Shield, User, Menu, LogIn } from "lucide-react";
+import { Shield, Menu, LogIn } from "lucide-react";
 import { Link } from "wouter";
 
 interface HeaderProps {
@@ -7,22 +7,6 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const handleExportReport = async () => {
-    try {
-      const response = await fetch('/api/security/export-report');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'cybersec-report.json';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Failed to export report:', error);
-    }
-  };
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-30">
@@ -56,26 +40,6 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={handleExportReport}
-              data-testid="button-export-report"
-              className="hidden sm:flex"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export Report
-            </Button>
-            {/* Mobile export button */}
-            <Button 
-              variant="secondary" 
-              size="sm"
-              onClick={handleExportReport}
-              data-testid="button-export-report-mobile"
-              className="sm:hidden p-2"
-            >
-              <Download className="h-4 w-4" />
-            </Button>
             
             {/* Auth Buttons */}
             <Link href="/login">
