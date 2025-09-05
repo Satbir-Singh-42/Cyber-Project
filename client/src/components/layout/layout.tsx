@@ -21,12 +21,6 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Debug indicator - remove in production */}
-      {sidebarOpen && (
-        <div className="fixed top-4 right-4 z-[100] bg-red-500 text-white px-2 py-1 text-xs rounded lg:hidden">
-          Sidebar Open
-        </div>
-      )}
       
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
