@@ -18,10 +18,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
+  name: 'sessionId',
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Allow over HTTP in development
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'lax',
   },
 }));
 
@@ -62,8 +64,10 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
+    console.error("Server error:", err);
   });
 
   // importantly only setup vite in development and after
