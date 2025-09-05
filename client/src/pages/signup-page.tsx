@@ -89,17 +89,20 @@ export default function SignupPage() {
       });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast({
         title: "Account Created!",
         description: `Welcome ${data.user.name}! Your account has been created successfully.`,
       });
-      // Invalidate user query to refresh auth state  
-      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      // Add a small delay to ensure session is established
+      
+      // Clear and refetch user data to ensure fresh session state
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Add a delay to ensure session is fully established
       setTimeout(() => {
-        setLocation('/');
-      }, 100);
+        window.location.reload(); // Force full page reload to ensure session is recognized
+      }, 500);
     },
     onError: (error: any) => {
       // Extract clean error message

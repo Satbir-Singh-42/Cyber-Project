@@ -64,19 +64,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('SIGNUP: Session created:', req.sessionID);
       console.log('SIGNUP: User set in session:', (req.session as any).user);
 
-      // Force session save before responding
-      req.session.save((err) => {
+      // Force session save and regenerate session ID for security
+      req.session.regenerate((err) => {
         if (err) {
-          console.error('Session save error on signup:', err);
+          console.error('Session regenerate error:', err);
           return res.status(500).json({ message: "Session creation failed" });
         }
         
-        console.log('SIGNUP: Session saved successfully');
-        // Return user without password
-        const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({ 
-          message: "Account created successfully", 
-          user: userWithoutPassword 
+        // Set user data in the new session
+        (req.session as any).userId = newUser.id;
+        (req.session as any).user = {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          name: newUser.name,
+        };
+        
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error on signup:', saveErr);
+            return res.status(500).json({ message: "Session creation failed" });
+          }
+          
+          console.log('SIGNUP: Session regenerated and saved successfully');
+          console.log('SIGNUP: New session ID:', req.sessionID);
+          console.log('SIGNUP: User in session:', (req.session as any).user);
+          
+          // Return user without password
+          const { password: _, ...userWithoutPassword } = newUser;
+          res.status(201).json({ 
+            message: "Account created successfully", 
+            user: userWithoutPassword 
+          });
         });
       });
     } catch (error: any) {
@@ -118,19 +137,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('LOGIN: Session after setting user:', req.session);
       console.log('LOGIN: Session ID:', req.sessionID);
       
-      // Force session save before responding
-      req.session.save((err) => {
+      // Force session save and regenerate for security
+      req.session.regenerate((err) => {
         if (err) {
-          console.error('Session save error:', err);
+          console.error('Session regenerate error:', err);
           return res.status(500).json({ message: "Session creation failed" });
         }
         
-        console.log('Session saved successfully');
-        // Return user without password
-        const { password: _, ...userWithoutPassword } = user;
-        res.json({ 
-          message: "Login successful", 
-          user: userWithoutPassword 
+        // Set user data in the new session
+        (req.session as any).userId = user.id;
+        (req.session as any).user = {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          name: user.name,
+        };
+        
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('Session save error:', saveErr);
+            return res.status(500).json({ message: "Session creation failed" });
+          }
+          
+          console.log('LOGIN: Session regenerated and saved successfully');
+          console.log('LOGIN: New session ID:', req.sessionID);
+          console.log('LOGIN: User in session:', (req.session as any).user);
+          
+          // Return user without password
+          const { password: _, ...userWithoutPassword } = user;
+          res.json({ 
+            message: "Login successful", 
+            user: userWithoutPassword 
+          });
         });
       });
     } catch (error: any) {
