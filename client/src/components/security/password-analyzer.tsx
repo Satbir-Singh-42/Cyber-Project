@@ -99,8 +99,15 @@ export function PasswordAnalyzer() {
 
   const analyzePasswordMutation = useMutation({
     mutationFn: async (password: string) => {
-      // Temporary client-side analysis while database is being fixed
-      return analyzePasswordClientSide(password);
+      try {
+        // Try backend API first
+        const response = await apiRequest('POST', '/api/security/password-analysis', { password });
+        return response.json();
+      } catch (error) {
+        // Fallback to client-side analysis if backend fails
+        console.log('Backend failed, using client-side analysis');
+        return analyzePasswordClientSide(password);
+      }
     },
     onSuccess: (data) => {
       setAnalysis(data);

@@ -23,7 +23,7 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       
-      {/* Main App Routes (With Layout) */}
+      {/* Main App Routes (With Layout) - Available for both guest and authenticated users */}
       <Route path="/">
         {(params) => (
           <Layout>

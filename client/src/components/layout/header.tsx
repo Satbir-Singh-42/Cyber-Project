@@ -41,6 +41,11 @@ export function Header({ onMenuClick }: HeaderProps) {
           
           <div className="flex items-center space-x-2 sm:space-x-4">
             
+            {/* Guest Mode Badge */}
+            <div className="hidden sm:flex items-center bg-muted px-3 py-1 rounded-full">
+              <span className="text-xs font-medium text-muted-foreground">Guest Mode</span>
+            </div>
+            
             {/* Auth Buttons */}
             <Link href="/login">
               <Button variant="ghost" size="sm" className="hidden sm:flex">

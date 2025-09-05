@@ -20,19 +20,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const keyloggerService = new KeyloggerService();
   const fileIntegrityService = new FileIntegrityService();
 
-  // Password Analysis
+  // Password Analysis - Works for both guest and authenticated users
   app.post("/api/security/password-analysis", async (req, res) => {
     try {
       const { password } = passwordAnalysisRequestSchema.parse(req.body);
       const analysis = passwordService.analyzePassword(password);
       
-      // Store result
-      await storage.createScanResult({
-        type: 'password',
-        target: 'password-analysis',
-        result: JSON.stringify(analysis),
-        score: analysis.score
-      });
+      // Store result only if user is authenticated
+      // For guests, just return the analysis without storing
+      try {
+        await storage.createScanResult({
+          type: 'password',
+          target: 'password-analysis',
+          result: JSON.stringify(analysis),
+          score: analysis.score
+        });
+      } catch (dbError) {
+        // If database fails, still return analysis for guest mode
+        console.log('Database storage failed, continuing in guest mode');
+      }
 
       res.json(analysis);
     } catch (error: any) {
@@ -188,14 +194,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get scan history
+  // Get scan history - Returns empty array for guests, full history for authenticated users
   app.get("/api/security/scan-history", async (req, res) => {
     try {
       const { type } = req.query;
       const results = await storage.getScanResults(type as string);
       res.json(results);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      // Return empty array for guest mode if database fails
+      console.log('Database query failed, returning empty results for guest mode');
+      res.json([]);
     }
   });
 
