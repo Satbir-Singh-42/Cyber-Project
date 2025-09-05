@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Eye, EyeOff, Key, Check, X, Lightbulb } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 
 // Temporary client-side password analysis
 function analyzePasswordClientSide(password: string): PasswordAnalysis {
@@ -95,7 +94,6 @@ export function PasswordAnalyzer() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [analysis, setAnalysis] = useState<PasswordAnalysis | null>(null);
-  const { toast } = useToast();
 
   const analyzePasswordMutation = useMutation({
     mutationFn: async (password: string) => {
@@ -113,16 +111,7 @@ export function PasswordAnalyzer() {
       setAnalysis(data);
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to analyze password";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Analysis Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to analyze password:', error);
     },
   });
 

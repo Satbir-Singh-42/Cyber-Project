@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FilePen, FolderPlus, Folder, Play, RefreshCw, Edit, Plus, Trash2, History } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 
 interface FileChange {
   type: 'added' | 'modified' | 'deleted';
@@ -35,10 +34,7 @@ interface FileIntegrityResult {
 export function FileIntegrityMonitor() {
   const [directory, setDirectory] = useState('');
   const [recursive, setRecursive] = useState(true);
-  const [realTimeAlerts, setRealTimeAlerts] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(false);
   const [integrityResult, setIntegrityResult] = useState<FileIntegrityResult | null>(null);
-  const { toast } = useToast();
 
   const initBaselineMutation = useMutation({
     mutationFn: async ({ directory, recursive }: { directory: string; recursive: boolean }) => {
@@ -46,22 +42,10 @@ export function FileIntegrityMonitor() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Baseline Initialized",
-        description: `Initialized baseline for ${data.totalFiles} files`,
-      });
+      // Baseline initialized successfully
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to initialize baseline";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Initialization Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to initialize baseline:', error);
     },
   });
 
@@ -72,30 +56,9 @@ export function FileIntegrityMonitor() {
     },
     onSuccess: (data) => {
       setIntegrityResult(data);
-      if (data.changes.length > 0) {
-        toast({
-          title: "Changes Detected",
-          description: `Found ${data.changes.length} file changes`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "No Changes",
-          description: "All files are intact",
-        });
-      }
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to check file integrity";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Integrity Check Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to check file integrity:', error);
     },
   });
 
@@ -105,22 +68,10 @@ export function FileIntegrityMonitor() {
       return response.json();
     },
     onSuccess: (data) => {
-      toast({
-        title: "Baseline Updated",
-        description: `Updated baseline for ${data.totalFiles} files`,
-      });
+      // Baseline updated successfully
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to update baseline";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Update Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to update baseline:', error);
     },
   });
 
@@ -239,28 +190,6 @@ export function FileIntegrityMonitor() {
                 />
                 <Label htmlFor="recursive-checkbox" className="text-sm">
                   Monitor Subdirectories
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="alerts-checkbox"
-                  checked={realTimeAlerts}
-                  onCheckedChange={(checked) => setRealTimeAlerts(checked as boolean)}
-                  data-testid="checkbox-alerts"
-                />
-                <Label htmlFor="alerts-checkbox" className="text-sm">
-                  Real-time Alerts
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="email-checkbox"
-                  checked={emailNotifications}
-                  onCheckedChange={(checked) => setEmailNotifications(checked as boolean)}
-                  data-testid="checkbox-email"
-                />
-                <Label htmlFor="email-checkbox" className="text-sm">
-                  Email Notifications
                 </Label>
               </div>
             </div>

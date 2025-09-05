@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Fish, Search, Check, X, Info, AlertTriangle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 
 interface PhishingAnalysis {
   score: number;
@@ -27,7 +26,6 @@ interface PhishingAnalysis {
 export function PhishingDetector() {
   const [url, setUrl] = useState('');
   const [analysis, setAnalysis] = useState<PhishingAnalysis | null>(null);
-  const { toast } = useToast();
 
   const analyzeUrlMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -38,16 +36,7 @@ export function PhishingDetector() {
       setAnalysis(data);
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to analyze URL";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Analysis Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to analyze URL:', error);
     },
   });
 

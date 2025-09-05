@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Network, Play, Zap } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 
 interface OpenPort {
   port: number;
@@ -29,7 +28,6 @@ export function PortScanner() {
   const [target, setTarget] = useState('');
   const [portRange, setPortRange] = useState('1-1000');
   const [scanResult, setScanResult] = useState<PortScanResult | null>(null);
-  const { toast } = useToast();
 
   const scanPortsMutation = useMutation({
     mutationFn: async ({ target, portRange }: { target: string; portRange: string }) => {
@@ -38,22 +36,9 @@ export function PortScanner() {
     },
     onSuccess: (data) => {
       setScanResult(data);
-      toast({
-        title: "Scan Complete",
-        description: `Found ${data.openPorts.length} open ports on ${data.target}`,
-      });
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to scan ports";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Scan Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to scan ports:', error);
     },
   });
 
@@ -64,22 +49,9 @@ export function PortScanner() {
     },
     onSuccess: (data) => {
       setScanResult(data);
-      toast({
-        title: "Quick Scan Complete",
-        description: `Found ${data.openPorts.length} open ports on ${data.target}`,
-      });
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to perform quick scan";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Quick Scan Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to perform quick scan:', error);
     },
   });
 

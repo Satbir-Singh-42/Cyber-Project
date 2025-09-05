@@ -7,7 +7,6 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Keyboard, Search, Shield, Eye, AlertTriangle, Trash2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
 
 interface SuspiciousProcess {
   pid: number;
@@ -29,9 +28,7 @@ interface KeyloggerDetectionResult {
 }
 
 export function KeyloggerDetector() {
-  const [monitoring, setMonitoring] = useState(true);
   const [scanResult, setScanResult] = useState<KeyloggerDetectionResult | null>(null);
-  const { toast } = useToast();
 
   const scanMutation = useMutation({
     mutationFn: async () => {
@@ -40,30 +37,9 @@ export function KeyloggerDetector() {
     },
     onSuccess: (data) => {
       setScanResult(data);
-      if (data.suspiciousProcesses.length > 0) {
-        toast({
-          title: "Suspicious Activity Detected",
-          description: `Found ${data.suspiciousProcesses.length} suspicious processes`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "System Clean",
-          description: "No suspicious keylogger activity detected",
-        });
-      }
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to scan for keyloggers";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Scan Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to scan for keyloggers:', error);
     },
   });
 
@@ -74,31 +50,12 @@ export function KeyloggerDetector() {
     },
     onSuccess: (data, variables) => {
       if (data.success) {
-        toast({
-          title: "Process Terminated",
-          description: `Successfully terminated process ${variables}`,
-        });
         // Refresh scan results
         scanMutation.mutate();
-      } else {
-        toast({
-          title: "Termination Failed",
-          description: "Failed to terminate the process",
-          variant: "destructive",
-        });
       }
     },
     onError: (error: any) => {
-      // Extract clean error message
-      let errorMessage = "Failed to terminate process";
-      if (error?.message) {
-        errorMessage = error.message.replace(/^\d+:\s*/, ''); // Remove status codes
-      }
-      toast({
-        title: "Termination Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Failed to terminate process:', error);
     },
   });
 
@@ -133,17 +90,6 @@ export function KeyloggerDetector() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="monitoring-switch" className="text-sm font-medium">
-              Real-time Monitoring
-            </Label>
-            <Switch
-              id="monitoring-switch"
-              checked={monitoring}
-              onCheckedChange={setMonitoring}
-              data-testid="switch-monitoring"
-            />
-          </div>
 
           <Button
             onClick={() => scanMutation.mutate()}
@@ -254,18 +200,6 @@ export function KeyloggerDetector() {
                 </div>
               )}
 
-              {/* Process Monitor */}
-              {monitoring && scanResult.suspiciousProcesses.length === 0 && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <h4 className="font-medium mb-3 flex items-center">
-                    <Eye className="mr-2 h-4 w-4" />
-                    Active Monitoring
-                  </h4>
-                  <div className="text-sm text-accent text-center py-2">
-                    System monitoring active - No threats detected
-                  </div>
-                </div>
-              )}
             </>
           )}
 
