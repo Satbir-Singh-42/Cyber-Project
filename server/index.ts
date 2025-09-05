@@ -10,33 +10,43 @@ app.use(express.urlencoded({ extended: false }));
 
 // Session configuration  
 const pgStore = connectPg(session);
+
+// Ensure we have the DATABASE_URL
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is required for session storage');
+}
+
 app.use(session({
   store: new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
-    tableName: 'user_sessions',
+    tableName: 'sessions', // Match the schema table name
+    schemaName: 'public',
   }),
-  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production-super-secret',
   resave: false,
   saveUninitialized: false,
   name: 'sessionId',
-  proxy: true, // Trust reverse proxy
+  rolling: true, // Refresh session on each request
   cookie: {
-    secure: false,
+    secure: false, // Set to true in production with HTTPS
     httpOnly: false, // Allow JavaScript access for debugging
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
-    domain: undefined, // Let browser set domain
-    path: '/',
   },
 }));
 
 // Add CORS headers for development
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization,Cookie');
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5000');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization,Cookie,Set-Cookie');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 

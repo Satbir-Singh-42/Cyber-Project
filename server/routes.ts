@@ -61,11 +61,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: newUser.name,
       };
 
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = newUser;
-      res.status(201).json({ 
-        message: "Account created successfully", 
-        user: userWithoutPassword 
+      console.log('SIGNUP: Session created:', req.sessionID);
+      console.log('SIGNUP: User set in session:', (req.session as any).user);
+
+      // Force session save before responding
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error on signup:', err);
+          return res.status(500).json({ message: "Session creation failed" });
+        }
+        
+        console.log('SIGNUP: Session saved successfully');
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json({ 
+          message: "Account created successfully", 
+          user: userWithoutPassword 
+        });
       });
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -106,20 +118,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('LOGIN: Session after setting user:', req.session);
       console.log('LOGIN: Session ID:', req.sessionID);
       
-      // Force session save
+      // Force session save before responding
       req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err);
-        } else {
-          console.log('Session saved successfully');
+          return res.status(500).json({ message: "Session creation failed" });
         }
-      });
-
-      // Return user without password
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ 
-        message: "Login successful", 
-        user: userWithoutPassword 
+        
+        console.log('Session saved successfully');
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({ 
+          message: "Login successful", 
+          user: userWithoutPassword 
+        });
       });
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -288,13 +300,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const result = await keyloggerService.detectKeyloggers();
       
-      // Store result
-      await storage.createScanResult({
-        type: 'keylogger',
-        target: 'system-scan',
-        result: JSON.stringify(result),
-        score: result.suspiciousProcesses.length
-      });
+      // Store result for authenticated users
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'keylogger',
+            target: 'system-scan',
+            result: JSON.stringify(result),
+            score: result.suspiciousProcesses.length,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
+      }
 
       res.json(result);
     } catch (error: any) {
@@ -338,13 +358,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
       const result = await fileIntegrityService.checkIntegrity(directory, recursive);
       
-      // Store result
-      await storage.createScanResult({
-        type: 'file_integrity',
-        target: directory,
-        result: JSON.stringify(result),
-        score: result.changes.length
-      });
+      // Store result for authenticated users
+      const user = (req.session as any)?.user;
+      if (user) {
+        try {
+          await storage.createScanResult({
+            type: 'file_integrity',
+            target: directory,
+            result: JSON.stringify(result),
+            score: result.changes.length,
+            userId: user.id
+          });
+        } catch (dbError) {
+          console.log('Database storage failed for authenticated user');
+        }
+      }
 
       res.json(result);
     } catch (error: any) {
