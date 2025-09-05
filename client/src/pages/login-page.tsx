@@ -82,8 +82,10 @@ export default function LoginPage() {
       });
       // Invalidate user query to refresh auth state
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      // Redirect to dashboard
-      setLocation('/');
+      // Add a small delay to ensure session is established
+      setTimeout(() => {
+        setLocation('/');
+      }, 100);
     },
     onError: (error: any) => {
       toast({

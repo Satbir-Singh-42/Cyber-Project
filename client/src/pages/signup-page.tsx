@@ -93,8 +93,12 @@ export default function SignupPage() {
         title: "Account Created!",
         description: `Welcome ${data.user.name}! Your account has been created successfully.`,
       });
-      // Redirect to dashboard
-      setLocation('/');
+      // Invalidate user query to refresh auth state  
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      // Add a small delay to ensure session is established
+      setTimeout(() => {
+        setLocation('/');
+      }, 100);
     },
     onError: (error: any) => {
       toast({
