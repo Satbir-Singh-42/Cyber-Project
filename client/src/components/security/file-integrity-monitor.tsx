@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FilePen, FolderPlus, Folder, Play, RefreshCw, Edit, Plus, Trash2, History } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { FilePen, FolderPlus, Folder, Play, RefreshCw, Edit, Plus, Trash2, History, AlertTriangle, CheckCircle, XCircle, Clock, Shield, Eye } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface FileChange {
@@ -15,6 +18,8 @@ interface FileChange {
   oldHash?: string;
   newHash?: string;
   size?: number;
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  reasons?: string[];
   timestamp: string;
 }
 
@@ -28,13 +33,20 @@ interface FileIntegrityResult {
     deleted: number;
     unchanged: number;
   };
+  riskAssessment: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    criticalChanges: number;
+    suspiciousPatterns: string[];
+  };
   lastScan: string;
 }
 
 export function FileIntegrityMonitor() {
   const [directory, setDirectory] = useState('');
   const [recursive, setRecursive] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [integrityResult, setIntegrityResult] = useState<FileIntegrityResult | null>(null);
+  const { toast } = useToast();
 
   const initBaselineMutation = useMutation({
     mutationFn: async ({ directory, recursive }: { directory: string; recursive: boolean }) => {
@@ -42,10 +54,18 @@ export function FileIntegrityMonitor() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Baseline initialized successfully
+      toast({
+        title: "Baseline Initialized",
+        description: `Successfully created baseline for ${directory} with ${data.totalFiles || 0} files.`,
+      });
     },
     onError: (error: any) => {
       console.error('Failed to initialize baseline:', error);
+      toast({
+        title: "Baseline Failed",
+        description: "Unable to initialize baseline. Please check directory permissions.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -56,9 +76,22 @@ export function FileIntegrityMonitor() {
     },
     onSuccess: (data) => {
       setIntegrityResult(data);
+      const riskLevel = data.riskAssessment?.level || 'low';
+      const changesCount = data.changes.length;
+      
+      toast({
+        title: "Integrity Check Complete",
+        description: `Found ${changesCount} changes. Risk level: ${riskLevel}`,
+        variant: riskLevel === 'critical' || riskLevel === 'high' ? "destructive" : "default",
+      });
     },
     onError: (error: any) => {
       console.error('Failed to check file integrity:', error);
+      toast({
+        title: "Integrity Check Failed",
+        description: "Unable to check file integrity. Please verify directory exists and permissions.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -68,10 +101,20 @@ export function FileIntegrityMonitor() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Baseline updated successfully
+      toast({
+        title: "Baseline Updated",
+        description: `Successfully updated baseline for ${directory}. All current files are now trusted.`,
+      });
+      // Refresh integrity check to show clean state
+      checkIntegrityMutation.mutate({ directory, recursive });
     },
     onError: (error: any) => {
       console.error('Failed to update baseline:', error);
+      toast({
+        title: "Update Failed",
+        description: "Unable to update baseline. Please check permissions and try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -126,7 +169,40 @@ export function FileIntegrityMonitor() {
     return filePath;
   };
 
+  // Auto-refresh functionality
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (autoRefresh && directory.trim() && !isLoading) {
+      interval = setInterval(() => {
+        checkIntegrityMutation.mutate({ directory: directory.trim(), recursive });
+      }, 60000); // Refresh every 60 seconds for file monitoring
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [autoRefresh, directory, recursive, checkIntegrityMutation]);
+
   const isLoading = initBaselineMutation.isPending || checkIntegrityMutation.isPending || updateBaselineMutation.isPending;
+
+  const getRiskColor = (riskLevel: string) => {
+    switch (riskLevel) {
+      case 'low': return 'bg-accent/20 text-accent';
+      case 'medium': return 'bg-yellow-500/20 text-yellow-500';
+      case 'high': return 'bg-orange-500/20 text-orange-500';
+      case 'critical': return 'bg-destructive/20 text-destructive';
+      default: return 'bg-muted/20 text-muted-foreground';
+    }
+  };
+
+  const getChangeRiskColor = (riskLevel?: string) => {
+    switch (riskLevel) {
+      case 'critical': return 'border-destructive bg-destructive/5';
+      case 'high': return 'border-orange-500 bg-orange-500/5';
+      case 'medium': return 'border-yellow-500 bg-yellow-500/5';
+      case 'low': return 'border-accent bg-accent/5';
+      default: return 'border-border';
+    }
+  };
 
   return (
     <Card className="bg-card border border-border">
@@ -194,26 +270,81 @@ export function FileIntegrityMonitor() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Button
                 onClick={handleCheckIntegrity}
                 disabled={!directory.trim() || isLoading}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                 data-testid="button-check-integrity"
               >
-                <Play className="mr-2 h-4 w-4" />
-                {checkIntegrityMutation.isPending ? "Checking..." : "Check Integrity"}
+                {checkIntegrityMutation.isPending ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Check Integrity
+                  </>
+                )}
               </Button>
-              <Button
-                variant="secondary"
-                onClick={handleUpdateBaseline}
-                disabled={!directory.trim() || isLoading}
-                className="w-full"
-                data-testid="button-update-baseline"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                {updateBaselineMutation.isPending ? "Updating..." : "Update Baseline"}
-              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    disabled={!directory.trim() || isLoading}
+                    className="w-full"
+                    data-testid="button-update-baseline"
+                  >
+                    {updateBaselineMutation.isPending ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Update Baseline
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Update Baseline?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will update the trusted baseline to include all current files and their states.
+                      Any detected changes will be marked as the new "normal" state.
+                      <br /><br />
+                      <strong>Directory:</strong> {directory}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleUpdateBaseline}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
+                      Update Baseline
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              
+              <div className="flex items-center space-x-2 px-3 py-2 border rounded-lg">
+                <Switch
+                  id="auto-refresh-integrity"
+                  checked={autoRefresh}
+                  onCheckedChange={setAutoRefresh}
+                  disabled={!directory.trim() || isLoading}
+                />
+                <Label htmlFor="auto-refresh-integrity" className="text-sm cursor-pointer flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  Auto-monitor
+                </Label>
+              </div>
             </div>
           </div>
 
@@ -224,52 +355,99 @@ export function FileIntegrityMonitor() {
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium flex items-center">
                     <History className="mr-2 h-4 w-4" />
-                    Recent Changes
+                    File Changes
                   </h4>
-                  {integrityResult && (
-                    <Badge className="bg-chart-3/20 text-chart-3" data-testid="text-changes-count">
-                      {integrityResult.changes.length} Changes
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {integrityResult?.riskAssessment && (
+                      <Badge className={getRiskColor(integrityResult.riskAssessment.level)}>
+                        {integrityResult.riskAssessment.level === 'low' ? 'Secure' : 
+                         integrityResult.riskAssessment.level.charAt(0).toUpperCase() + integrityResult.riskAssessment.level.slice(1)}
+                      </Badge>
+                    )}
+                    {integrityResult && (
+                      <Badge className="bg-chart-3/20 text-chart-3" data-testid="text-changes-count">
+                        {integrityResult.changes.length} Changes
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="p-4">
-                <div className="space-y-3 max-h-48 overflow-y-auto">
+                <div className="space-y-3 max-h-64 overflow-y-auto">
                   {integrityResult?.changes.length ? (
-                    integrityResult.changes.slice(0, 10).map((change, index) => (
-                      <div key={index} className={`flex items-start space-x-3 p-3 rounded-lg ${getChangeColor(change.type)}`}>
-                        {getChangeIcon(change.type)}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <span className="font-mono text-sm truncate" title={change.filePath}>
-                              {formatFilePath(change.filePath)}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-2">
-                              {new Date(change.timestamp).toLocaleTimeString()}
-                            </span>
+                    integrityResult.changes.slice(0, 20).map((change, index) => (
+                      <div key={index} className={`p-4 rounded-lg border-l-4 ${getChangeColor(change.type)} ${getChangeRiskColor(change.riskLevel)}`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            {getChangeIcon(change.type)}
+                            <Badge variant="outline" className="text-xs capitalize">
+                              {change.type}
+                            </Badge>
+                            {change.riskLevel && (
+                              <Badge className={getRiskColor(change.riskLevel)}>
+                                {change.riskLevel.charAt(0).toUpperCase() + change.riskLevel.slice(1)} Risk
+                              </Badge>
+                            )}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            File {change.type}
-                          </p>
-                          <div className="flex items-center space-x-4 mt-2 text-xs">
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(change.timestamp).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-xs text-muted-foreground">File Path:</span>
+                            <p className="font-mono text-sm break-all bg-muted/30 p-2 rounded mt-1" title={change.filePath}>
+                              {change.filePath}
+                            </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 text-xs">
                             {change.newHash && (
-                              <span>Hash: <code className="text-accent">{change.newHash.substring(0, 8)}...</code></span>
+                              <div>
+                                <span className="text-muted-foreground">Current Hash:</span>
+                                <code className="block text-accent font-mono mt-1">{change.newHash.substring(0, 16)}...</code>
+                              </div>
                             )}
                             {change.oldHash && (
-                              <span>Previous Hash: <code className="text-muted-foreground">{change.oldHash.substring(0, 8)}...</code></span>
-                            )}
-                            {change.size && (
-                              <span>Size: {formatFileSize(change.size)}</span>
+                              <div>
+                                <span className="text-muted-foreground">Previous Hash:</span>
+                                <code className="block text-muted-foreground font-mono mt-1">{change.oldHash.substring(0, 16)}...</code>
+                              </div>
                             )}
                           </div>
+                          
+                          {change.size && (
+                            <div className="text-xs">
+                              <span className="text-muted-foreground">File Size:</span>
+                              <span className="ml-2 font-mono">{formatFileSize(change.size)}</span>
+                            </div>
+                          )}
+                          
+                          {change.reasons && change.reasons.length > 0 && (
+                            <div>
+                              <span className="text-xs text-muted-foreground">Risk Factors:</span>
+                              <div className="text-xs text-orange-500 space-y-1 mt-1">
+                                {change.reasons.map((reason, reasonIndex) => (
+                                  <div key={reasonIndex} className="flex items-start gap-1">
+                                    <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                                    <span>{reason}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
                   ) : integrityResult ? (
                     <div className="text-center text-muted-foreground py-8">
-                      <FilePen className="h-12 w-12 mx-auto mb-2 text-accent" />
-                      <p>No file changes detected</p>
-                      <p className="text-xs">All monitored files are intact</p>
+                      <div className="bg-accent/10 border border-accent/20 rounded-lg p-6">
+                        <CheckCircle className="h-12 w-12 mx-auto mb-3 text-accent" />
+                        <p className="font-medium text-accent">Files Secure</p>
+                        <p className="text-xs text-muted-foreground mt-1">No unauthorized changes detected</p>
+                        <p className="text-xs text-muted-foreground">All {integrityResult.totalFiles} monitored files are intact</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center text-muted-foreground py-8">
@@ -299,7 +477,12 @@ export function FileIntegrityMonitor() {
             <div className="text-xs text-muted-foreground">Changes Detected</div>
           </div>
           <div className="bg-secondary p-4 rounded-lg text-center">
-            <div className="text-2xl font-bold text-accent" data-testid="text-integrity-score">
+            <div className={`text-2xl font-bold ${
+              integrityResult?.riskAssessment?.level === 'critical' ? 'text-destructive' :
+              integrityResult?.riskAssessment?.level === 'high' ? 'text-orange-500' :
+              integrityResult?.riskAssessment?.level === 'medium' ? 'text-yellow-500' :
+              'text-accent'
+            }`} data-testid="text-integrity-score">
               {integrityResult ? 
                 `${(((integrityResult.statistics.unchanged || 0) / integrityResult.totalFiles) * 100).toFixed(1)}%` 
                 : '100%'}
@@ -317,14 +500,49 @@ export function FileIntegrityMonitor() {
         </div>
 
         {isLoading && (
-          <div className="mt-4 bg-secondary p-4 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-chart-5"></div>
-              <span className="text-sm">
-                {initBaselineMutation.isPending && "Initializing baseline..."}
-                {checkIntegrityMutation.isPending && "Checking file integrity..."}
-                {updateBaselineMutation.isPending && "Updating baseline..."}
-              </span>
+          <div className="mt-4 bg-secondary p-4 rounded-lg border-l-4 border-chart-5">
+            <div className="flex items-center space-x-3">
+              <RefreshCw className="h-5 w-5 animate-spin text-chart-5" />
+              <div>
+                <p className="text-sm font-medium">
+                  {initBaselineMutation.isPending && "Initializing Baseline"}
+                  {checkIntegrityMutation.isPending && "Checking File Integrity"}
+                  {updateBaselineMutation.isPending && "Updating Baseline"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {initBaselineMutation.isPending && "Creating trusted file signatures..."}
+                  {checkIntegrityMutation.isPending && "Scanning for file modifications and security threats..."}
+                  {updateBaselineMutation.isPending && "Updating trusted baseline with current file states..."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {checkIntegrityMutation.isError && (
+          <div className="mt-4 bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <XCircle className="h-5 w-5 text-destructive" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Integrity Check Failed</p>
+                <p className="text-xs text-muted-foreground">Unable to access directory or insufficient permissions</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {integrityResult?.riskAssessment?.suspiciousPatterns && integrityResult.riskAssessment.suspiciousPatterns.length > 0 && (
+          <div className="mt-4 bg-orange-500/10 border border-orange-500/20 p-4 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-orange-500">Suspicious Activity Detected</p>
+                <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                  {integrityResult.riskAssessment?.suspiciousPatterns?.map((pattern, index) => (
+                    <p key={index}>• {pattern}</p>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
