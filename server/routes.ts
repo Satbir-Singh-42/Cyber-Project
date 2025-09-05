@@ -103,6 +103,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: user.name,
       };
 
+      console.log('LOGIN: Session after setting user:', req.session);
+      console.log('LOGIN: Session ID:', req.sessionID);
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+        } else {
+          console.log('Session saved successfully');
+        }
+      });
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = user;
       res.json({ 
@@ -132,10 +144,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get current user
   app.get("/api/auth/user", (req, res) => {
+    console.log('AUTH CHECK: Session ID:', req.sessionID);
+    console.log('AUTH CHECK: Full session:', req.session);
+    console.log('AUTH CHECK: Session user:', (req.session as any)?.user);
+    
     const user = (req.session as any)?.user;
     if (!user) {
+      console.log('AUTH CHECK: No user found in session');
       return res.status(401).json({ message: "Not authenticated" });
     }
+    console.log('AUTH CHECK: User found, returning:', user);
     res.json(user);
   });
 

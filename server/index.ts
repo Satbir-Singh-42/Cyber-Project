@@ -14,19 +14,31 @@ app.use(session({
   store: new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: true,
-    tableName: 'user_sessions', // Completely different table name
+    tableName: 'user_sessions',
   }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
-  name: 'connect.sid',
+  name: 'sessionId',
+  proxy: true, // Trust reverse proxy
   cookie: {
-    secure: false, 
-    httpOnly: true,
+    secure: false,
+    httpOnly: false, // Allow JavaScript access for debugging
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
+    domain: undefined, // Let browser set domain
+    path: '/',
   },
 }));
+
+// Add CORS headers for development
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization,Cookie');
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
