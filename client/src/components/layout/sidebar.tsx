@@ -64,9 +64,10 @@ const sidebarItems: SidebarItem[] = [
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
+  onToggle?: (collapsed: boolean) => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -74,8 +75,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       <div className={cn(
         "bg-card border-r border-border flex flex-col transition-all duration-300",
-        // Desktop sidebar
-        "hidden lg:flex",
+        // Desktop sidebar - fixed position
+        "hidden lg:flex fixed left-0 top-0 h-full z-30",
         collapsed ? "w-16" : "w-64"
       )}>
       {/* Header */}
@@ -95,7 +96,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => {
+              const newCollapsed = !collapsed;
+              setCollapsed(newCollapsed);
+              onToggle?.(newCollapsed);
+            }}
             className="p-1 h-8 w-8"
             data-testid="button-toggle-sidebar"
           >
