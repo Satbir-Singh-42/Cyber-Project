@@ -13,7 +13,8 @@ const pgStore = connectPg(session);
 app.use(session({
   store: new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false, // Table already exists
+    createTableIfMissing: true,
+    tableName: 'session', // Use different table name to avoid conflicts
   }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production',
   resave: false,
