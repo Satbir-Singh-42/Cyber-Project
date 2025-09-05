@@ -12,6 +12,11 @@ export interface FileIntegrityResult {
     deleted: number;
     unchanged: number;
   };
+  riskAssessment: {
+    level: 'low' | 'medium' | 'high' | 'critical';
+    criticalChanges: number;
+    suspiciousPatterns: string[];
+  };
   lastScan: Date;
 }
 
@@ -21,6 +26,9 @@ export interface FileChange {
   oldHash?: string;
   newHash?: string;
   size?: number;
+  permissions?: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  reasons?: string[];
   timestamp: Date;
 }
 
@@ -63,21 +71,27 @@ export class FileIntegrityService {
       
       if (!currentFile) {
         // File was deleted
+        const riskLevel = this.assessFileRisk(filePath, 'deleted');
         changes.push({
           type: 'deleted',
           filePath,
           oldHash: baselineFile.hash,
+          riskLevel,
+          reasons: this.getChangeReasons(filePath, 'deleted'),
           timestamp: new Date()
         });
         statistics.deleted++;
       } else if (currentFile.hash !== baselineFile.hash) {
         // File was modified
+        const riskLevel = this.assessFileRisk(filePath, 'modified');
         changes.push({
           type: 'modified',
           filePath,
           oldHash: baselineFile.hash,
           newHash: currentFile.hash,
           size: currentFile.size,
+          riskLevel,
+          reasons: this.getChangeReasons(filePath, 'modified'),
           timestamp: new Date()
         });
         statistics.modified++;
@@ -89,22 +103,29 @@ export class FileIntegrityService {
     // Check for new files
     for (const currentFile of currentFiles) {
       if (!this.baseline.has(currentFile.path)) {
+        const riskLevel = this.assessFileRisk(currentFile.path, 'added');
         changes.push({
           type: 'added',
           filePath: currentFile.path,
           newHash: currentFile.hash,
           size: currentFile.size,
+          riskLevel,
+          reasons: this.getChangeReasons(currentFile.path, 'added'),
           timestamp: new Date()
         });
         statistics.added++;
       }
     }
 
+    // Assess risk level of changes
+    const riskAssessment = this.assessRisk(changes);
+
     return {
       directory,
       totalFiles: currentFiles.length,
       changes: changes.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
       statistics,
+      riskAssessment,
       lastScan: new Date()
     };
   }
@@ -215,5 +236,122 @@ export class FileIntegrityService {
   importBaseline(baseline: MonitoredFileInfo[]): void {
     this.baseline.clear();
     baseline.forEach(file => this.baseline.set(file.path, file));
+  }
+
+  private assessFileRisk(filePath: string, changeType: 'added' | 'modified' | 'deleted'): 'low' | 'medium' | 'high' | 'critical' {
+    const fileName = path.basename(filePath).toLowerCase();
+    const fileExt = path.extname(filePath).toLowerCase();
+    const dirPath = path.dirname(filePath).toLowerCase();
+
+    // Critical risk files
+    if (fileName.includes('password') || fileName.includes('secret') || fileName.includes('key')) {
+      return 'critical';
+    }
+    if (['.exe', '.dll', '.bat', '.cmd', '.ps1', '.sh'].includes(fileExt)) {
+      return 'critical';
+    }
+    if (dirPath.includes('system32') || dirPath.includes('windows') || dirPath.includes('/etc/') || dirPath.includes('/bin/')) {
+      return 'critical';
+    }
+
+    // High risk files
+    if (['.config', '.ini', '.cfg', '.conf'].includes(fileExt)) {
+      return 'high';
+    }
+    if (fileName.includes('config') || fileName.includes('setting')) {
+      return 'high';
+    }
+
+    // Medium risk files
+    if (['.js', '.py', '.php', '.sql', '.json'].includes(fileExt)) {
+      return 'medium';
+    }
+
+    // Low risk for common file types
+    if (['.txt', '.log', '.tmp', '.cache'].includes(fileExt)) {
+      return 'low';
+    }
+
+    return 'medium';
+  }
+
+  private getChangeReasons(filePath: string, changeType: 'added' | 'modified' | 'deleted'): string[] {
+    const reasons: string[] = [];
+    const fileName = path.basename(filePath).toLowerCase();
+    const fileExt = path.extname(filePath).toLowerCase();
+    const dirPath = path.dirname(filePath).toLowerCase();
+
+    if (changeType === 'added') {
+      reasons.push('New file detected');
+      if (['.exe', '.dll'].includes(fileExt)) {
+        reasons.push('Executable file added - potential security risk');
+      }
+    } else if (changeType === 'modified') {
+      if (fileName.includes('config')) {
+        reasons.push('Configuration file modified');
+      }
+      if (fileName.includes('log')) {
+        reasons.push('Log file updated');
+      }
+    } else if (changeType === 'deleted') {
+      reasons.push('File removed from system');
+      if (['.exe', '.dll'].includes(fileExt)) {
+        reasons.push('System file deleted - potential integrity issue');
+      }
+    }
+
+    return reasons;
+  }
+
+  private assessRisk(changes: FileChange[]): FileIntegrityResult['riskAssessment'] {
+    const criticalChanges = changes.filter(c => c.riskLevel === 'critical').length;
+    const highChanges = changes.filter(c => c.riskLevel === 'high').length;
+    
+    const suspiciousPatterns: string[] = [];
+    
+    // Detect mass file operations
+    if (changes.length > 50) {
+      suspiciousPatterns.push('Mass file operation detected');
+    }
+    
+    // Detect executable changes
+    const executableChanges = changes.filter(c => 
+      path.extname(c.filePath).toLowerCase() === '.exe' ||
+      path.extname(c.filePath).toLowerCase() === '.dll'
+    ).length;
+    
+    if (executableChanges > 0) {
+      suspiciousPatterns.push(`${executableChanges} executable file(s) modified`);
+    }
+    
+    // Detect system file changes
+    const systemFileChanges = changes.filter(c => 
+      c.filePath.toLowerCase().includes('system32') ||
+      c.filePath.toLowerCase().includes('windows') ||
+      c.filePath.toLowerCase().includes('/etc/') ||
+      c.filePath.toLowerCase().includes('/bin/')
+    ).length;
+    
+    if (systemFileChanges > 0) {
+      suspiciousPatterns.push(`${systemFileChanges} system file(s) affected`);
+    }
+
+    // Determine overall risk level
+    let level: 'low' | 'medium' | 'high' | 'critical';
+    if (criticalChanges > 5 || systemFileChanges > 10) {
+      level = 'critical';
+    } else if (criticalChanges > 0 || highChanges > 10 || executableChanges > 5) {
+      level = 'high';
+    } else if (highChanges > 0 || changes.length > 20) {
+      level = 'medium';
+    } else {
+      level = 'low';
+    }
+
+    return {
+      level,
+      criticalChanges,
+      suspiciousPatterns
+    };
   }
 }

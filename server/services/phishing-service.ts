@@ -19,7 +19,11 @@ const SUSPICIOUS_KEYWORDS = [
   'paypal', 'amazon', 'netflix', 'microsoft', 'google', 'apple', 'facebook',
   'secure', 'verify', 'update', 'suspended', 'confirm', 'urgent', 'click',
   'winner', 'congratulations', 'prize', 'offer', 'limited', 'act-now',
-  'banking', 'account', 'login', 'signin', 'verification'
+  'banking', 'account', 'login', 'signin', 'verification', 'auth', 'security',
+  'alert', 'warning', 'notice', 'expired', 'renewal', 'billing', 'payment',
+  'refund', 'claim', 'validate', 'activate', 'unlock', 'restore', 'recover',
+  'support', 'service', 'helpdesk', 'customer', 'team', 'department',
+  'cryptocurrency', 'bitcoin', 'ethereum', 'wallet', 'trading', 'investment'
 ];
 
 const SHORT_URL_DOMAINS = [
@@ -154,8 +158,23 @@ export class PhishingService {
 
   private hasHomographAttack(hostname: string): boolean {
     // Check for mixed scripts or confusing characters
-    const homographs = /[а-я]|[α-ω]|[ａ-ｚ]/; // Cyrillic, Greek, fullwidth
-    return homographs.test(hostname);
+    const cyrillicPattern = /[а-я]/i; // Cyrillic letters
+    const greekPattern = /[α-ω]/i; // Greek letters  
+    const fullwidthPattern = /[ａ-ｚ]/i; // Fullwidth Latin
+    
+    // Check for confusing character combinations in domain
+    const confusingChars = /[0oOQ1lI5sS2zZ6G9gq]/;
+    const hasConfusing = confusingChars.test(hostname) && hostname.length > 3;
+    
+    // Check for IDN (Internationalized Domain Name) encoding
+    const idnPattern = /xn--/;
+    
+    // Look for suspicious Unicode substitutions
+    const suspiciousUnicode = cyrillicPattern.test(hostname) || 
+                             greekPattern.test(hostname) || 
+                             fullwidthPattern.test(hostname);
+    
+    return suspiciousUnicode || (hasConfusing && idnPattern.test(hostname));
   }
 
   private hasExcessiveRedirects(url: string): boolean {
@@ -166,8 +185,11 @@ export class PhishingService {
   private hasSuspiciousPort(port: string): boolean {
     if (!port) return false;
     const portNum = parseInt(port);
-    const suspiciousPorts = [8080, 8000, 3000, 5000, 9000, 8443];
-    return suspiciousPorts.includes(portNum);
+    // Common non-standard ports that could indicate suspicious activity
+    const suspiciousPorts = [8080, 8000, 3000, 5000, 9000, 8443, 8888, 9999, 4444, 31337, 1337, 8008];
+    // Very high ports that might be used to avoid detection
+    const highPort = portNum > 49152;
+    return suspiciousPorts.includes(portNum) || highPort;
   }
 
   private getRiskLevel(score: number): PhishingAnalysis['risk'] {

@@ -20,7 +20,11 @@ const COMMON_PASSWORDS = [
   'password', '123456', '123456789', 'qwerty', 'abc123', 'monkey', 
   'letmein', 'dragon', '111111', 'baseball', 'iloveyou', 'trustno1',
   'sunshine', 'master', 'welcome', 'shadow', 'ashley', 'football',
-  'jesus', 'michael', 'ninja', 'mustang', 'password1', 'admin'
+  'jesus', 'michael', 'ninja', 'mustang', 'password1', 'admin',
+  'password123', '12345678', 'qwerty123', 'password!', 'welcome123',
+  'password2024', '123qwe', 'qwertyuiop', 'zxcvbnm', 'asdfghjkl',
+  'passw0rd', 'p@ssword', 'secret', 'login', 'root', 'toor',
+  'guest', 'user', 'test', 'demo', 'temp', 'changeme', 'default'
 ];
 
 const DICTIONARY_WORDS = [
@@ -106,13 +110,19 @@ export class PasswordService {
   }
 
   private hasRepeatingPatterns(password: string): boolean {
-    // Check for repeated characters
+    // Check for repeated characters (3 or more)
     const repeatedChars = /(.)\1{2,}/.test(password);
     
-    // Check for sequential patterns
-    const sequential = /(123|234|345|456|567|678|789|890|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)/i.test(password);
+    // Check for sequential patterns (numbers and letters)
+    const sequential = /(012|123|234|345|456|567|678|789|890|901|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|zyx|yxw|xwv|wvu|vut|uts|tsr|srq|rqp|qpo|pon|onm|nml|mlk|lkj|kji|jih|ihg|hgf|gfe|fed|edc|dcb|cba)/i.test(password);
     
-    return repeatedChars || sequential;
+    // Check for keyboard patterns
+    const keyboardPatterns = /(qwer|wert|erty|rtyu|tyui|yuio|uiop|asdf|sdfg|dfgh|fghj|ghjk|hjkl|zxcv|xcvb|cvbn|vbnm|qaz|wsx|edc|rfv|tgb|yhn|ujm|1qaz|2wsx|3edc|4rfv|5tgb|6yhn|7ujm|8ik|9ol|0p)/i.test(password);
+    
+    // Check for alternating patterns
+    const alternating = /^(.)(.)\1\2/.test(password) || /^(.)(.)(.)\1\2\3/.test(password);
+    
+    return repeatedChars || sequential || keyboardPatterns || alternating;
   }
 
   private getStrengthLevel(score: number): PasswordAnalysis['strength'] {
@@ -156,15 +166,26 @@ export class PasswordService {
 
   private estimateCrackTime(entropy: number): string {
     const attempts = Math.pow(2, entropy) / 2; // Average case
-    const attemptsPerSecond = 1e10; // Modern hardware assumption
-    const seconds = attempts / attemptsPerSecond;
+    
+    // Modern attack scenarios
+    const scenarios = {
+      basic: 1e3,        // Basic online attack
+      moderate: 1e6,     // Offline attack with consumer hardware
+      advanced: 1e12,    // Dedicated cracking rig
+      quantum: 1e15      // Future quantum computing threat
+    };
+    
+    const scenario = scenarios.advanced; // Use realistic threat model
+    const seconds = attempts / scenario;
 
-    if (seconds < 60) return 'Less than a minute';
+    if (seconds < 1) return 'Instantly';
+    if (seconds < 60) return `${Math.ceil(seconds)} seconds`;
     if (seconds < 3600) return `${Math.ceil(seconds / 60)} minutes`;
     if (seconds < 86400) return `${Math.ceil(seconds / 3600)} hours`;
     if (seconds < 2592000) return `${Math.ceil(seconds / 86400)} days`;
     if (seconds < 31536000) return `${Math.ceil(seconds / 2592000)} months`;
+    if (seconds < 3153600000) return `${Math.ceil(seconds / 31536000)} years`;
     
-    return `${Math.ceil(seconds / 31536000)} years`;
+    return 'Centuries';
   }
 }

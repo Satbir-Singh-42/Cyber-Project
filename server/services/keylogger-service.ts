@@ -24,7 +24,11 @@ export interface SuspiciousProcess {
 
 const SUSPICIOUS_KEYWORDS = [
   'keylog', 'keystroke', 'capture', 'hook', 'monitor', 'record',
-  'spy', 'stealth', 'hidden', 'invisible', 'backdoor', 'trojan'
+  'spy', 'stealth', 'hidden', 'invisible', 'backdoor', 'trojan',
+  'rat', 'remote', 'access', 'screen', 'capture', 'logger',
+  'dump', 'harvest', 'steal', 'inject', 'payload', 'shell',
+  'reverse', 'bind', 'tunnel', 'persistence', 'privilege',
+  'escalation', 'bypass', 'evasion', 'rootkit', 'malware'
 ];
 
 const SUSPICIOUS_PROCESSES = [
@@ -35,7 +39,12 @@ const SUSPICIOUS_PROCESSES = [
 const LEGITIMATE_PROCESSES = [
   'explorer.exe', 'chrome.exe', 'firefox.exe', 'notepad.exe',
   'code.exe', 'powershell.exe', 'cmd.exe', 'taskmgr.exe',
-  'winlogon.exe', 'csrss.exe', 'lsass.exe', 'services.exe'
+  'winlogon.exe', 'csrss.exe', 'lsass.exe', 'services.exe',
+  'svchost.exe', 'dwm.exe', 'conhost.exe', 'RuntimeBroker.exe',
+  'dllhost.exe', 'SearchIndexer.exe', 'audiodg.exe', 'wininit.exe',
+  'spoolsv.exe', 'WmiPrvSE.exe', 'MsMpEng.exe', 'SecurityHealthService.exe',
+  'node.exe', 'python.exe', 'java.exe', 'msedge.exe', 'opera.exe',
+  'safari.exe', 'teams.exe', 'slack.exe', 'discord.exe', 'zoom.exe'
 ];
 
 export class KeyloggerService {
@@ -208,9 +217,31 @@ export class KeyloggerService {
       /^[A-Z]{5,}\.exe$/, // Long random uppercase
       /^[a-zA-Z0-9]{12,}\.exe$/, // Very long alphanumeric
       /^[a-f0-9]{8,}\.exe$/, // Hex-like names
+      /^[0-9]{6,}\.exe$/, // All numbers
+      /^[a-zA-Z]{2}[0-9]{4,}\.exe$/, // Mixed patterns
+      /^tmp[a-zA-Z0-9]+\.exe$/, // Temp file patterns
     ];
     
-    return randomPatterns.some(pattern => pattern.test(name));
+    // Check for entropy in the name (measure of randomness)
+    const entropy = this.calculateStringEntropy(name.replace(/\.[^.]*$/, ''));
+    
+    return randomPatterns.some(pattern => pattern.test(name)) || entropy > 4.2;
+  }
+
+  private calculateStringEntropy(str: string): number {
+    const freq: { [key: string]: number } = {};
+    for (const char of str) {
+      freq[char] = (freq[char] || 0) + 1;
+    }
+    
+    let entropy = 0;
+    const len = str.length;
+    for (const count of Object.values(freq)) {
+      const p = count / len;
+      entropy -= p * Math.log2(p);
+    }
+    
+    return entropy;
   }
 
   private calculateOverallRisk(suspiciousProcesses: SuspiciousProcess[]): KeyloggerDetectionResult['riskLevel'] {
