@@ -97,9 +97,6 @@ export function Header({ onMenuClick }: HeaderProps) {
               </Button>
             </Link>
             
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-muted rounded-full flex items-center justify-center">
-              <User className="text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
-            </div>
           </div>
         </div>
       </div>
