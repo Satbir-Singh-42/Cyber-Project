@@ -93,8 +93,8 @@ export default function SignupPage() {
         title: "Account Created!",
         description: `Welcome ${data.user.name}! Your account has been created successfully.`,
       });
-      // Redirect to login page
-      setLocation('/login');
+      // Redirect to dashboard
+      setLocation('/');
     },
     onError: (error: any) => {
       toast({
@@ -110,10 +110,9 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left side - Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8 lg:px-8">
-        <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -283,60 +282,6 @@ export default function SignupPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {/* Right side - Platform Benefits (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary/5 border-l border-border">
-        <div className="flex-1 flex flex-col justify-center px-8 py-12">
-          <div className="max-w-lg mx-auto space-y-8">
-            <div className="text-center space-y-4">
-              <Badge className="bg-accent/20 text-accent border-accent/20 mb-4">
-                <Star className="w-3 h-3 mr-1" />
-                Professional Security Suite
-              </Badge>
-              <h2 className="text-3xl font-bold">Why Choose CyberSec?</h2>
-              <p className="text-lg text-muted-foreground">
-                Advanced security tools trusted by industry leaders
-              </p>
-            </div>
-
-            <div className="space-y-6">
-              {platformBenefits.map((benefit, index) => {
-                const Icon = benefit.icon;
-                return (
-                  <div key={index} className="flex items-start space-x-4 p-4 bg-background/50 rounded-lg border border-border/50">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{benefit.title}</h3>
-                        <Badge variant="secondary" className="text-xs">
-                          {benefit.highlight}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {benefit.description}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="bg-background/50 rounded-lg border border-border/50 p-6">
-              <h3 className="font-semibold mb-4">Included Security Tools</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {securityTools.map((tool, index) => (
-                  <div key={index} className="flex items-center space-x-2 text-sm">
-                    <Shield className="w-3 h-3 text-accent" />
-                    <span className="text-muted-foreground">{tool.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

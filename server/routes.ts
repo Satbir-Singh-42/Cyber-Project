@@ -52,6 +52,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: hashedPassword,
       });
 
+      // Create session automatically after signup
+      (req.session as any).userId = newUser.id;
+      (req.session as any).user = {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        name: newUser.name,
+      };
+
       // Return user without password
       const { password: _, ...userWithoutPassword } = newUser;
       res.status(201).json({ 

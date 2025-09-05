@@ -99,10 +99,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Left side - Login Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8 lg:px-8">
-        <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        <div className="space-y-6">
           {/* Header */}
           <div className="text-center space-y-2">
             <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -211,46 +210,6 @@ export default function LoginPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {/* Right side - Features (Hidden on Mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-primary/5 border-l border-border">
-        <div className="flex-1 flex flex-col justify-center px-8 py-12">
-          <div className="max-w-lg mx-auto space-y-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-3xl font-bold">Enterprise Security Suite</h2>
-              <p className="text-lg text-muted-foreground">
-                Comprehensive cybersecurity tools for threat detection and system analysis
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              {securityFeatures.map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div key={index} className="flex items-start space-x-4 p-4 bg-background/50 rounded-lg border border-border/50">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <h3 className="font-semibold">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-1" />
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="text-center pt-6 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                Trusted by security professionals worldwide
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
