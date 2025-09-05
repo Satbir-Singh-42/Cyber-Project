@@ -7,7 +7,6 @@ import {
   Network, 
   Keyboard, 
   FilePen, 
-  History, 
   Home,
   ChevronLeft,
   ChevronRight,
@@ -59,12 +58,6 @@ const sidebarItems: SidebarItem[] = [
     label: "File Integrity Monitor",
     path: "/file-integrity",
     description: "Track file system changes"
-  },
-  {
-    icon: History,
-    label: "Scan History",
-    path: "/history",
-    description: "View all security scan results"
   }
 ];
 

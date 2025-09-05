@@ -1,6 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
-import connectPg from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -8,45 +6,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Session configuration  
-const pgStore = connectPg(session);
-
-// Ensure we have the DATABASE_URL
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is required for session storage');
-}
-
-app.use(session({
-  store: new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: true,
-    tableName: 'sessions',
-    schemaName: 'public',
-  }),
-  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-production-super-secret',
-  resave: false,
-  saveUninitialized: false,
-  name: 'connect.sid', // Use default session cookie name
-  rolling: false, // Don't refresh on every request to avoid cookie issues
-  proxy: false, // Disable proxy for now
-  cookie: {
-    secure: false, // HTTP for development
-    httpOnly: false, // Allow JS access for debugging
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'none', // Allow cross-origin cookies
-    path: '/',
-    domain: undefined // Let browser set domain
-  },
-}));
 
 // Add CORS headers for development  
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', origin); // Allow any origin with credentials
+  res.header('Access-Control-Allow-Origin', origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
-  res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization,Cookie,Set-Cookie');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {

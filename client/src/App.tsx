@@ -10,18 +10,11 @@ import PhishingDetectorPage from "@/pages/phishing-detector-page";
 import PortScannerPage from "@/pages/port-scanner-page";
 import KeyloggerDetectorPage from "@/pages/keylogger-detector-page";
 import FileIntegrityPage from "@/pages/file-integrity-page";
-import HistoryPage from "@/pages/history-page";
-import LoginPage from "@/pages/login-page";
-import SignupPage from "@/pages/signup-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
-      {/* Auth Routes (No Layout) */}
-      <Route path="/login" component={LoginPage} />
-      <Route path="/signup" component={SignupPage} />
-      
       {/* Main App Routes (With Layout) */}
       <Route path="/">
         <Layout>
@@ -51,11 +44,6 @@ function Router() {
       <Route path="/file-integrity">
         <Layout>
           <FileIntegrityPage />
-        </Layout>
-      </Route>
-      <Route path="/history">
-        <Layout>
-          <HistoryPage />
         </Layout>
       </Route>
       <Route>

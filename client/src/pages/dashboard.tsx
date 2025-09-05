@@ -1,46 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   Key, 
   Fish, 
   Network, 
   Keyboard, 
   FilePen, 
-  TrendingUp, 
   Shield, 
   AlertTriangle,
-  CheckCircle,
-  Clock,
   ArrowRight
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 
-interface ScanResult {
-  id: string;
-  type: string;
-  target: string;
-  result: string;
-  score: number | null;
-  timestamp: string;
-}
 
 export default function Dashboard() {
-  const { isAuthenticated, user, isGuest } = useAuth();
-  
-  const { data: scanResults = [] } = useQuery<ScanResult[]>({
-    queryKey: ['/api/security/scan-history'],
-  });
-
-  const recentScans = scanResults.slice(0, 5);
-  const totalScans = scanResults.length;
-  const todayScans = scanResults.filter((scan) => {
-    const scanDate = new Date(scan.timestamp);
-    const today = new Date();
-    return scanDate.toDateString() === today.toDateString();
-  }).length;
 
   const securityTools = [
     {
@@ -90,63 +62,25 @@ export default function Dashboard() {
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {isAuthenticated ? `Welcome back, ${user?.name}` : 'Security Dashboard'}
+          Cybersecurity Toolkit
         </h1>
         <p className="text-muted-foreground mt-2">
-          {isAuthenticated 
-            ? "Your personal cybersecurity toolkit with saved scan history and analytics"
-            : "Comprehensive cybersecurity toolkit for threat detection and system analysis"
-          }
+          Comprehensive cybersecurity toolkit for threat detection and system analysis
         </p>
-        {isGuest && (
-          <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border">
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm font-medium">Guest Mode</span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              You're using the toolkit as a guest. <Link href="/signup" className="text-primary hover:underline">Create an account</Link> to save your scan results and access advanced features.
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Scans</p>
-                <p className="text-3xl font-bold" data-testid="text-total-scans">{totalScans}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-primary" />
+      {/* System Status */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">System Status</p>
+              <p className="text-3xl font-bold text-accent">Ready</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Today's Scans</p>
-                <p className="text-3xl font-bold" data-testid="text-today-scans">{todayScans}</p>
-              </div>
-              <Clock className="h-8 w-8 text-accent" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">System Status</p>
-                <p className="text-3xl font-bold text-accent">Secure</p>
-              </div>
-              <Shield className="h-8 w-8 text-accent" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Shield className="h-8 w-8 text-accent" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Security Tools Grid */}
       <Card>
@@ -176,45 +110,6 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Scan Activity</CardTitle>
-          <Link href="/history">
-            <Button variant="outline" size="sm">
-              View All <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {recentScans.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckCircle className="h-12 w-12 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No recent scans</h3>
-              <p>Start by running a security analysis with one of the tools above.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentScans.map((scan) => (
-                <div
-                  key={scan.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg overflow-hidden"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Badge variant="secondary" className="capitalize">
-                      {scan.type.replace('_', ' ')}
-                    </Badge>
-                    <span className="font-medium">{scan.target}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(scan.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Security Tips */}
       <Card>
