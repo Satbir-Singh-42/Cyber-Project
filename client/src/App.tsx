@@ -23,23 +23,51 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       <Route path="/signup" component={SignupPage} />
       
-      {/* Main App Routes (With Layout) - Available for both guest and authenticated users */}
+      {/* Main App Routes (With Layout) */}
       <Route path="/">
-        {(params) => (
-          <Layout>
-            <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/password-analyzer" component={PasswordAnalyzerPage} />
-              <Route path="/phishing-detector" component={PhishingDetectorPage} />
-              <Route path="/port-scanner" component={PortScannerPage} />
-              <Route path="/keylogger-detector" component={KeyloggerDetectorPage} />
-              <Route path="/file-integrity" component={FileIntegrityPage} />
-              <Route path="/history" component={HistoryPage} />
-              <Route path="/settings" component={SettingsPage} />
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-        )}
+        <Layout>
+          <Dashboard />
+        </Layout>
+      </Route>
+      <Route path="/password-analyzer">
+        <Layout>
+          <PasswordAnalyzerPage />
+        </Layout>
+      </Route>
+      <Route path="/phishing-detector">
+        <Layout>
+          <PhishingDetectorPage />
+        </Layout>
+      </Route>
+      <Route path="/port-scanner">
+        <Layout>
+          <PortScannerPage />
+        </Layout>
+      </Route>
+      <Route path="/keylogger-detector">
+        <Layout>
+          <KeyloggerDetectorPage />
+        </Layout>
+      </Route>
+      <Route path="/file-integrity">
+        <Layout>
+          <FileIntegrityPage />
+        </Layout>
+      </Route>
+      <Route path="/history">
+        <Layout>
+          <HistoryPage />
+        </Layout>
+      </Route>
+      <Route path="/settings">
+        <Layout>
+          <SettingsPage />
+        </Layout>
+      </Route>
+      <Route>
+        <Layout>
+          <NotFound />
+        </Layout>
       </Route>
     </Switch>
   );
