@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Download, Shield, User, Menu } from "lucide-react";
+import { Download, Shield, User, Menu, LogIn } from "lucide-react";
+import { Link } from "wouter";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -75,6 +76,27 @@ export function Header({ onMenuClick }: HeaderProps) {
             >
               <Download className="h-4 w-4" />
             </Button>
+            
+            {/* Auth Buttons */}
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="hidden sm:flex">
+                <LogIn className="mr-2 h-4 w-4" />
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm" className="hidden sm:flex">
+                Sign Up
+              </Button>
+            </Link>
+            
+            {/* Mobile auth button */}
+            <Link href="/login">
+              <Button variant="ghost" size="sm" className="sm:hidden p-2">
+                <LogIn className="h-4 w-4" />
+              </Button>
+            </Link>
+            
             <div className="w-7 h-7 sm:w-8 sm:h-8 bg-muted rounded-full flex items-center justify-center">
               <User className="text-muted-foreground h-3 w-3 sm:h-4 sm:w-4" />
             </div>
