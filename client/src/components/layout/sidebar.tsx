@@ -11,7 +11,8 @@ import {
   Home,
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -68,15 +69,23 @@ const sidebarItems: SidebarItem[] = [
   }
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className={cn(
-      "bg-card border-r border-border flex flex-col transition-all duration-300",
-      collapsed ? "w-16" : "w-64"
-    )}>
+    <>
+      <div className={cn(
+        "bg-card border-r border-border flex flex-col transition-all duration-300",
+        // Desktop sidebar
+        "hidden lg:flex",
+        collapsed ? "w-16" : "w-64"
+      )}>
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
@@ -162,5 +171,89 @@ export function Sidebar() {
         </Link>
       </div>
     </div>
+    
+    {/* Mobile sidebar */}
+    <div className={cn(
+      "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border flex flex-col transition-transform duration-300 lg:hidden",
+      isOpen ? "translate-x-0" : "-translate-x-full"
+    )}>
+      {/* Mobile header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Shield className="text-primary-foreground text-lg" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-foreground">CyberSec</h1>
+              <p className="text-xs text-muted-foreground">Security Toolkit</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="p-1 h-8 w-8"
+            data-testid="button-close-mobile-sidebar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Items */}
+      <nav className="flex-1 p-4 space-y-2">
+        {sidebarItems.map((item) => {
+          const isActive = location === item.path;
+          const Icon = item.icon;
+          
+          return (
+            <Link key={item.path} href={item.path}>
+              <div
+                className={cn(
+                  "flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                  "hover:bg-secondary/80",
+                  isActive ? "bg-primary text-primary-foreground" : "text-foreground"
+                )}
+                onClick={onClose}
+                data-testid={`nav-mobile-${item.path.replace(/\//g, '-') || 'home'}`}
+              >
+                <Icon className="h-4 w-4 min-w-[16px]" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">{item.label}</div>
+                  <div className={cn(
+                    "text-xs truncate",
+                    isActive ? "text-primary-foreground/80" : "text-muted-foreground"
+                  )}>
+                    {item.description}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Mobile Settings */}
+      <div className="p-4 border-t border-border">
+        <Link href="/settings">
+          <div
+            className={cn(
+              "flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+              "hover:bg-secondary/80 text-foreground"
+            )}
+            onClick={onClose}
+            data-testid="nav-mobile-settings"
+          >
+            <Settings className="h-4 w-4" />
+            <div className="flex-1">
+              <div className="font-medium text-sm">Settings</div>
+              <div className="text-xs text-muted-foreground">Configure toolkit</div>
+            </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+    </>
   );
 }

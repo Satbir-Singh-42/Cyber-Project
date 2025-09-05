@@ -78,14 +78,14 @@ export function PasswordAnalyzer() {
 
   return (
     <Card className="bg-card border border-border">
-      <CardContent className="p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Key className="text-primary text-xl" />
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Key className="text-primary text-lg sm:text-xl" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold">Password Strength Analyzer</h3>
-            <p className="text-sm text-muted-foreground">Analyze password security and get improvement suggestions</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-semibold">Password Strength Analyzer</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Analyze password security and get improvement suggestions</p>
           </div>
         </div>
 
@@ -120,9 +120,9 @@ export function PasswordAnalyzer() {
           {analysis && (
             <>
               {/* Password Strength Indicator */}
-              <div className="bg-secondary p-4 rounded-lg">
+              <div className="bg-secondary p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Strength Score</span>
+                  <span className="text-xs sm:text-sm font-medium">Strength Score</span>
                   <span className={`text-sm font-bold ${getStrengthColor(analysis.strength)}`} data-testid="text-strength-score">
                     {analysis.score}/100
                   </span>

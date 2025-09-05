@@ -93,7 +93,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -135,20 +135,20 @@ export default function Dashboard() {
           <CardTitle>Security Analysis Tools</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {securityTools.map((tool) => {
               const Icon = tool.icon;
               return (
                 <Link key={tool.path} href={tool.path}>
-                  <div className="p-4 border border-border rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer group">
+                  <div className="p-3 sm:p-4 border border-border rounded-lg hover:bg-secondary/50 transition-colors cursor-pointer group">
                     <div className="flex items-start justify-between mb-3">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${tool.bgColor}`}>
-                        <Icon className={`h-6 w-6 ${tool.color}`} />
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center ${tool.bgColor}`}>
+                        <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${tool.color}`} />
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
-                    <h3 className="font-semibold mb-1">{tool.title}</h3>
-                    <p className="text-sm text-muted-foreground">{tool.description}</p>
+                    <h3 className="text-sm sm:text-base font-semibold mb-1">{tool.title}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{tool.description}</p>
                   </div>
                 </Link>
               );
@@ -179,7 +179,7 @@ export default function Dashboard() {
               {recentScans.map((scan) => (
                 <div
                   key={scan.id}
-                  className="flex items-center justify-between p-3 border border-border rounded-lg"
+                  className="flex items-center justify-between p-3 border border-border rounded-lg overflow-hidden"
                 >
                   <div className="flex items-center space-x-3">
                     <Badge variant="secondary" className="capitalize">
@@ -206,7 +206,7 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-sm">
             <div>
               <h4 className="font-medium mb-2">Regular Security Checks:</h4>
               <ul className="space-y-1 text-muted-foreground">
