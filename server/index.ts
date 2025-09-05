@@ -28,11 +28,13 @@ app.use(session({
   saveUninitialized: false,
   name: 'sessionId',
   rolling: true, // Refresh session on each request
+  proxy: true, // Trust reverse proxy
   cookie: {
     secure: false, // Set to true in production with HTTPS
     httpOnly: false, // Allow JavaScript access for debugging
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
+    path: '/',
   },
 }));
 
