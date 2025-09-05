@@ -1,4 +1,6 @@
-import { type User, type InsertUser, type ScanResult, type InsertScanResult, type MonitoredFile, type InsertMonitoredFile } from "@shared/schema";
+import { type User, type InsertUser, type ScanResult, type InsertScanResult, type MonitoredFile, type InsertMonitoredFile, users, scanResults, monitoredFiles } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -15,80 +17,78 @@ export interface IStorage {
   deleteMonitoredFile(id: string): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private scanResults: Map<string, ScanResult>;
-  private monitoredFiles: Map<string, MonitoredFile>;
-
-  constructor() {
-    this.users = new Map();
-    this.scanResults = new Map();
-    this.monitoredFiles = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async createScanResult(insertScanResult: InsertScanResult): Promise<ScanResult> {
-    const id = randomUUID();
-    const scanResult: ScanResult = {
-      ...insertScanResult,
-      id,
-      timestamp: new Date(),
-    };
-    this.scanResults.set(id, scanResult);
+    const [scanResult] = await db
+      .insert(scanResults)
+      .values({
+        ...insertScanResult,
+        score: insertScanResult.score ?? null,
+      })
+      .returning();
     return scanResult;
   }
 
   async getScanResults(type?: string): Promise<ScanResult[]> {
-    const results = Array.from(this.scanResults.values());
-    if (type) {
-      return results.filter(result => result.type === type);
-    }
+    const query = db.select().from(scanResults);
+    const results = type 
+      ? await query.where(eq(scanResults.type, type))
+      : await query;
+    
     return results.sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
   }
 
   async createMonitoredFile(insertFile: InsertMonitoredFile): Promise<MonitoredFile> {
-    const id = randomUUID();
-    const file: MonitoredFile = {
-      ...insertFile,
-      id,
-      isActive: true,
-    };
-    this.monitoredFiles.set(id, file);
+    const [file] = await db
+      .insert(monitoredFiles)
+      .values({
+        ...insertFile,
+        isActive: true,
+      })
+      .returning();
     return file;
   }
 
   async getMonitoredFiles(): Promise<MonitoredFile[]> {
-    return Array.from(this.monitoredFiles.values()).filter(file => file.isActive);
+    return await db
+      .select()
+      .from(monitoredFiles)
+      .where(eq(monitoredFiles.isActive, true));
   }
 
   async updateMonitoredFile(id: string, updates: Partial<MonitoredFile>): Promise<MonitoredFile | undefined> {
-    const existing = this.monitoredFiles.get(id);
-    if (!existing) return undefined;
-    
-    const updated = { ...existing, ...updates };
-    this.monitoredFiles.set(id, updated);
-    return updated;
+    const [updated] = await db
+      .update(monitoredFiles)
+      .set(updates)
+      .where(eq(monitoredFiles.id, id))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteMonitoredFile(id: string): Promise<boolean> {
-    return this.monitoredFiles.delete(id);
+    const result = await db
+      .delete(monitoredFiles)
+      .where(eq(monitoredFiles.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

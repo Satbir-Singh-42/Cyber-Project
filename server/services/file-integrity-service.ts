@@ -58,7 +58,7 @@ export class FileIntegrityService {
     currentFiles.forEach(file => currentFileMap.set(file.path, file));
 
     // Check for modifications and deletions
-    for (const [filePath, baselineFile] of this.baseline) {
+    for (const [filePath, baselineFile] of Array.from(this.baseline.entries())) {
       const currentFile = currentFileMap.get(filePath);
       
       if (!currentFile) {
@@ -198,7 +198,7 @@ export class FileIntegrityService {
 
   getBaselineInfo(): { totalFiles: number; directories: string[] } {
     const directories = new Set<string>();
-    for (const filePath of this.baseline.keys()) {
+    for (const filePath of Array.from(this.baseline.keys())) {
       directories.add(path.dirname(filePath));
     }
 
