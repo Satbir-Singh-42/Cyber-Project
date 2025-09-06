@@ -114,7 +114,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
       </div>
 
       {/* Navigation Items */}
-      <nav className={cn("flex-1", collapsed ? "p-2 space-y-10" : "p-4 space-y-2")}>
+      <nav className={cn("flex-1", collapsed ? "p-2 space-y-0" : "p-4 space-y-2")}>
         {sidebarItems.map((item) => {
           const isActive = location === item.path;
           const Icon = item.icon;
