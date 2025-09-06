@@ -129,7 +129,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                 )}
                 data-testid={`nav-${item.path.replace(/\//g, '-') || 'home'}`}
               >
-                <Icon className={cn(collapsed ? "h-8 w-8" : "h-4 w-4", !collapsed && "min-w-[16px]")} />
+                <Icon className="h-8 w-8 min-w-[32px]" />
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{item.label}</div>
