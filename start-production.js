@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Environment validation
-const requiredEnvVars = ["DATABASE_URL", "GOOGLE_API_KEY"];
+const requiredEnvVars = ["DATABASE_URL"];
 const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -23,15 +23,6 @@ if (missingVars.length > 0) {
   });
   console.error(
     "\nPlease ensure all required environment variables are set before starting the production server."
-  );
-  process.exit(1);
-}
-
-// Validate Google API key format
-const apiKey = process.env.GOOGLE_API_KEY;
-if (!apiKey || apiKey.length < 30) {
-  console.error(
-    "❌ Invalid GOOGLE_API_KEY format. Please ensure you have a valid Google AI API key."
   );
   process.exit(1);
 }
@@ -46,7 +37,7 @@ if (!dbUrl.startsWith("postgresql://")) {
 }
 
 console.log("✅ Environment validation passed");
-console.log("🚀 Starting SolarSense AI production server...");
+console.log("🚀 Starting CyberSec Toolkit production server...");
 
 // Set production environment
 process.env.NODE_ENV = "production";
