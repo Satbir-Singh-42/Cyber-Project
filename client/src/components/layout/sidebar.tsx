@@ -188,10 +188,10 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                 <div
                   className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",
-                    "hover:bg-gray-100 dark:hover:bg-gray-800",
+                    "hover:bg-secondary/80",
                     isActive 
-                      ? "bg-blue-600 text-white" 
-                      : "text-gray-900 dark:text-white"
+                      ? "bg-primary text-primary-foreground" 
+                      : "text-foreground"
                   )}
                   onClick={onClose}
                   data-testid={`nav-mobile-${item.path.replace(/\//g, '-') || 'home'}`}
@@ -202,8 +202,8 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                     <div className={cn(
                       "text-xs truncate",
                       isActive 
-                        ? "text-blue-100" 
-                        : "text-gray-600 dark:text-gray-400"
+                        ? "text-primary-foreground/80" 
+                        : "text-muted-foreground"
                     )}>
                       {item.description}
                     </div>
