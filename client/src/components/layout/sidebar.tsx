@@ -114,7 +114,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className={cn("flex-1 space-y-2", collapsed ? "p-2" : "p-4")}>
         {sidebarItems.map((item) => {
           const isActive = location === item.path;
           const Icon = item.icon;
@@ -123,7 +123,8 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
             <Link key={item.path} href={item.path}>
               <div
                 className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                  "flex items-center rounded-lg cursor-pointer transition-colors",
+                  collapsed ? "px-2 py-2 justify-center" : "px-3 py-2 space-x-3",
                   "hover:bg-secondary/80",
                   isActive ? "bg-primary text-primary-foreground" : "text-foreground"
                 )}
@@ -195,7 +196,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                   onClick={onClose}
                   data-testid={`nav-mobile-${item.path.replace(/\//g, '-') || 'home'}`}
                 >
-                  <Icon className="h-4 w-4 min-w-[16px]" />
+                  <Icon className="h-8 w-8 min-w-[32px]" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{item.label}</div>
                     <div className={cn(
