@@ -124,7 +124,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
               <div
                 className={cn(
                   "flex items-center rounded-lg cursor-pointer transition-colors",
-                  collapsed ? "px-2 py-2 justify-center" : "px-3 py-2 space-x-3",
+                  collapsed ? "px-2 py-2 justify-center mb-10" : "px-3 py-2 space-x-3",
                   "hover:bg-secondary/80",
                   isActive ? "bg-primary text-primary-foreground" : "text-foreground"
                 )}
