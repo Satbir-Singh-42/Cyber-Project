@@ -1,194 +1,153 @@
 # CyberSec Toolkit
 
-A professional-grade cybersecurity analysis suite built with React, Express, and TypeScript. This application provides comprehensive security tools for real-world threat detection, analysis, and system monitoring.
+A comprehensive cybersecurity analysis suite built with React, Express, and TypeScript. This application provides multiple security tools for analyzing passwords, detecting phishing attempts, scanning ports, identifying keyloggers, and monitoring file integrity.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue.svg)
 ![React](https://img.shields.io/badge/React-18-61DAFB.svg)
-![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)
 
-## 🛡️ Security Analysis Tools
+## 🛡️ Security Tools
 
-### 🔐 Password Strength Analyzer
-**Advanced cryptographic password analysis with real-world attack modeling**
+### 🔐 Password Analyzer
+Advanced password strength analysis with comprehensive security assessment:
 
-- **Entropy Calculation**: Shannon entropy analysis for true randomness measurement
-- **Pattern Detection**: Identifies keyboard patterns, repetitive sequences, and common substitutions
-- **Dictionary Attack Simulation**: Comprehensive checks against 10,000+ common passwords and dictionary words
-- **Crack Time Estimation**: Realistic time estimates using modern GPU attack scenarios (1e12 attempts/second)
-- **Comprehensive Scoring**: Multi-factor scoring system considering length, complexity, and predictability
-- **Security Recommendations**: Actionable suggestions for password improvement
+- **Entropy Calculation**: Shannon entropy for randomness measurement
+- **Pattern Detection**: Identifies keyboard patterns and common substitutions
+- **Dictionary Protection**: Checks against extensive password databases
+- **Crack Time Estimation**: Realistic attack time calculations
+- **Security Scoring**: Multi-factor strength assessment
+- **Improvement Suggestions**: Actionable security recommendations
 
-**Technical Implementation:**
-- Uses Node.js `crypto` module for secure hash calculations
-- Implements NIST guidelines for password strength assessment
-- Real-time entropy calculation using log₂(character_space^length)
-- Advanced pattern recognition for sequential and keyboard-based attacks
+### 🎣 Phishing Detector
+Multi-vector URL analysis for phishing detection:
 
-### 🎣 Phishing Detection Engine
-**Multi-vector URL analysis for sophisticated phishing detection**
+- **IP-Based Detection**: Identifies suspicious direct IP access
+- **Subdomain Analysis**: Detects excessive subdomain nesting
+- **Homograph Protection**: Unicode spoofing identification
+- **URL Shortener Recognition**: Flags shortened URLs
+- **Keyword Scanning**: Searches for phishing indicators
+- **Risk Assessment**: Comprehensive threat scoring
 
-- **IP-Based URL Detection**: Identifies direct IP access attempts (IPv4/IPv6)
-- **Subdomain Analysis**: Detects suspicious patterns and excessive subdomain nesting
-- **Homograph Attack Detection**: Unicode and IDN (Internationalized Domain Name) spoofing identification
-- **URL Shortener Recognition**: Identifies and flags shortened URLs from major services
-- **Keyword Analysis**: Scans for 25+ suspicious keywords commonly used in phishing
-- **Domain Age Assessment**: Evaluates domain establishment and legitimacy
-- **Security Protocol Verification**: Checks for HTTPS implementation and certificate issues
+### 🌐 Port Scanner
+Professional TCP port scanning with service detection:
 
-**Technical Implementation:**
-- Real-time URL parsing with Node.js URL API
-- Comprehensive regex patterns for attack vector identification
-- Legitimate domain database for false positive reduction
-- Risk scoring algorithm with weighted threat factors
+- **Real Network Connections**: Actual TCP socket connections
+- **Service Banner Grabbing**: Version identification
+- **Concurrent Scanning**: Optimized performance with rate limiting
+- **Security Assessment**: Identifies vulnerable services
+- **Custom Port Ranges**: Flexible scanning options
+- **Network Respect**: Built-in delays and connection limits
 
-### 🌐 Network Port Scanner
-**Professional-grade TCP port scanning with service detection**
+### ⌨️ Keylogger Detector
+Behavioral process analysis for malware detection:
 
-- **Real TCP Connections**: Performs actual network connections (not simulated)
-- **Service Banner Grabbing**: Retrieves service banners for version identification
-- **Concurrent Scanning**: Adaptive concurrency with rate limiting for network efficiency
-- **Service Detection**: Identifies 30+ common services with version information
-- **Security Risk Assessment**: Flags high-risk services and vulnerable configurations
-- **Custom Port Ranges**: Supports individual ports, ranges (1-1000), and comma-separated lists
-- **Network Respect**: Built-in delays and connection limits to avoid network flooding
+- **Process Monitoring**: Real-time system process analysis
+- **Behavioral Analysis**: Entropy-based obfuscation detection
+- **Resource Monitoring**: CPU and memory usage analysis
+- **Pattern Recognition**: Identifies suspicious naming patterns
+- **Risk Scoring**: Multi-factor threat assessment
+- **Cross-Platform**: Windows, macOS, and Linux support
 
-**Technical Implementation:**
-- Uses Node.js `net` module for raw TCP socket connections
-- Implements proper timeout handling and error management
-- Real service probes for HTTP, SSH, FTP, SMTP, and other protocols
-- Identifies dangerous services like Telnet, unencrypted FTP, and open databases
+### 📁 File Integrity Monitor
+Cryptographic file system monitoring:
 
-### ⌨️ Keylogger Detection System
-**Behavioral process analysis for malware detection**
+- **SHA-256 Hashing**: Cryptographic integrity verification
+- **Baseline Management**: File system baseline creation
+- **Change Detection**: Real-time modification tracking
+- **Risk Assessment**: Security impact categorization
+- **Mass Operation Detection**: Malware spreading identification
+- **System Protection**: Critical file monitoring
 
-- **Real Process Monitoring**: Interfaces with OS process APIs (Windows WMIC, Unix ps)
-- **Behavioral Analysis**: Entropy-based detection of obfuscated process names
-- **Resource Usage Monitoring**: CPU and memory analysis for suspicious activity
-- **Pattern Recognition**: Identifies mimicked system processes and random naming patterns
-- **Risk Scoring**: Multi-factor analysis including keywords, patterns, and behavior
-- **Process Termination**: Capability to terminate suspicious processes (with proper permissions)
+## 🏗️ Technology Stack
 
-**Technical Implementation:**
-- Cross-platform process enumeration (Windows, macOS, Linux)
-- String entropy calculation for randomness detection
-- Comprehensive suspicious keyword database (30+ indicators)
-- System process legitimacy verification against known good processes
+### Frontend Architecture
+- **React 18** with TypeScript for type safety
+- **Tailwind CSS** with dark theme support and design system
+- **Radix UI** components for accessibility
+- **TanStack Query** for server state management
+- **Wouter** for lightweight routing
+- **Vite** for fast development and optimized builds
 
-### 📁 File Integrity Monitoring
-**Cryptographic file system monitoring with change detection**
+### Backend Architecture
+- **Node.js 20+** with Express framework
+- **TypeScript** with ESM modules
+- **PostgreSQL** with Drizzle ORM
+- **Helmet** for security headers
+- **Express Validator** for input validation
+- **Rate Limiting** and session management
 
-- **SHA-256 Hashing**: Cryptographic integrity verification for tamper detection
-- **Baseline Management**: Creates and maintains file system baselines
-- **Real-time Change Detection**: Identifies added, modified, and deleted files
-- **Risk Assessment**: Categorizes changes by security impact (Critical/High/Medium/Low)
-- **Mass Operation Detection**: Identifies potential malware spreading patterns
-- **System File Protection**: Special monitoring for critical system directories
-- **Recursive Scanning**: Deep directory traversal with intelligent filtering
+### Database Design
+- **Users**: Authentication and profile management
+- **Scan Results**: Security analysis storage
+- **Monitored Files**: File integrity tracking
+- **Sessions**: Secure session management
 
-**Technical Implementation:**
-- Uses Node.js `fs/promises` for efficient file system operations
-- Implements SHA-256 with Node.js `crypto` module for integrity verification
-- Intelligent file type detection and risk categorization
-- Memory-efficient handling of large directory structures
-
-## 🏗️ Technical Architecture
-
-### Frontend Stack
-- **React 18** with TypeScript for type-safe component development
-- **Vite** for lightning-fast development and optimized production builds
-- **Tailwind CSS** with custom design system and dark/light mode support
-- **Radix UI** components for accessibility-first interface design
-- **TanStack Query** for intelligent server state management and caching
-- **Wouter** for lightweight client-side routing
-
-### Backend Stack
-- **Node.js 18+** with ES modules and TypeScript compilation
-- **Express.js** with comprehensive security middleware stack
-- **Helmet.js** for security headers (CSP, HSTS, X-Frame-Options)
-- **Rate Limiting** with express-rate-limit and custom security endpoint throttling
-- **Input Validation** using Zod schemas for all API endpoints
-
-### Security Features
-- **Content Security Policy** with strict script and style sources
-- **Request Rate Limiting**: 100 requests/15min general, 20 requests/15min security endpoints
-- **Input Sanitization**: Comprehensive validation for all user inputs
-- **Memory Management**: Efficient handling of large datasets and file operations
-- **Error Handling**: Secure error responses that don't leak system information
-
-## 🚀 Installation & Setup
+## 🚀 Getting Started
 
 ### Prerequisites
-- **Node.js 18+** (Latest LTS recommended)
-- **npm** or **yarn** package manager
-- **4GB+ RAM** (for large file system scans)
-- **Network access** (for port scanning and phishing detection)
+- Node.js 20 or higher
+- PostgreSQL database (Neon recommended)
+- npm package manager
 
-### Quick Start
+### Installation
 
+1. **Clone and Install**:
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd cybersec-toolkit
-
-# Install dependencies
 npm install
+```
 
-# Set up environment variables
+2. **Environment Setup**:
+```bash
+# Create environment file
 cp .env.example .env
+```
 
-# Start development server
+Required environment variables:
+```env
+DATABASE_URL=postgresql://user:password@host:port/database
+NODE_ENV=development
+PORT=5000
+```
+
+3. **Start Development**:
+```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`
-
-### Environment Configuration
-
-Create a `.env` file in the root directory:
-
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=5000
-
-# Database (Optional - for session storage)
-DATABASE_URL=postgresql://user:password@localhost:5432/cybersec
-
-# Security Settings
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-SECURITY_RATE_LIMIT_MAX=20
-```
+Application runs at `http://localhost:5000`
 
 ### Production Deployment
 
+**Build and Start**:
 ```bash
-# Build for production
 npm run build
-
-# Start production server
 npm start
 ```
+
+**Render Deployment**:
+- Build Command: `npm run build`
+- Start Command: `npm start`
+- Environment: Set `DATABASE_URL` in dashboard
 
 ## 📚 API Documentation
 
 ### Security Analysis Endpoints
 
-All endpoints are prefixed with `/api/security/` and require JSON payloads.
+All endpoints use `POST` requests with JSON payloads:
 
 #### Password Analysis
 ```bash
 POST /api/security/password-analysis
-Content-Type: application/json
-
 {
   "password": "your_password_here"
 }
 ```
 
-**Response:**
+**Response**:
 ```json
 {
   "score": 85,
@@ -209,19 +168,15 @@ Content-Type: application/json
 
 #### Phishing Detection
 ```bash
-POST /api/security/phishing-detection
-Content-Type: application/json
-
+POST /api/security/phishing-analysis
 {
-  "url": "https://example.com/suspicious-page"
+  "url": "https://example.com/page"
 }
 ```
 
 #### Port Scanning
 ```bash
 POST /api/security/port-scan
-Content-Type: application/json
-
 {
   "target": "192.168.1.1",
   "portRange": "1-1000"
@@ -230,163 +185,149 @@ Content-Type: application/json
 
 #### Keylogger Detection
 ```bash
-POST /api/security/keylogger-detection
-Content-Type: application/json
-
+POST /api/security/keylogger-scan
 {}
 ```
 
-#### File Integrity Check
+#### File Integrity
 ```bash
-POST /api/security/file-integrity-check
-Content-Type: application/json
-
+POST /api/security/file-integrity
 {
   "directory": "/path/to/monitor",
   "recursive": true
 }
 ```
 
-## 🔧 Configuration Options
+## 🔧 Project Structure
 
-### Security Settings
+```
+cybersec-toolkit/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/     # UI components
+│   │   ├── pages/          # Application pages
+│   │   ├── lib/            # Utilities
+│   │   └── hooks/          # Custom hooks
+├── server/                 # Express backend
+│   ├── services/           # Security services
+│   │   ├── password-service.ts
+│   │   ├── phishing-service.ts
+│   │   ├── port-service.ts
+│   │   ├── keylogger-service.ts
+│   │   └── file-integrity-service.ts
+│   ├── routes.ts           # API routes
+│   └── index.ts            # Server entry
+├── shared/                 # Shared schemas
+│   └── schema.ts           # Database schemas
+└── dist/                   # Production build
+```
 
-The application includes configurable security settings:
+## 🔐 Security Features
 
-- **Rate Limiting**: Adjustable request limits per IP address
-- **Scan Timeouts**: Configurable timeouts for network operations
-- **File Size Limits**: Maximum file sizes for integrity monitoring
-- **Concurrent Operations**: Limits for simultaneous network connections
+### Input Validation
+- Comprehensive input sanitization
+- Zod schema validation
+- SQL injection prevention
+- XSS protection
 
-### Performance Tuning
+### Security Headers
+- Content Security Policy
+- X-Frame-Options protection
+- HSTS enforcement
+- XSS protection headers
 
-For optimal performance:
+### Rate Limiting
+- API endpoint throttling
+- Brute force protection
+- DDoS mitigation
 
-- **Memory**: Minimum 4GB RAM for large directory scans
-- **Network**: Stable connection for port scanning operations
-- **CPU**: Multi-core processor recommended for concurrent analysis
-- **Storage**: SSD recommended for file integrity operations
+### Session Management
+- Secure session storage
+- PostgreSQL session store
+- Automatic session cleanup
 
 ## 🛠️ Development
 
-### Project Structure
-```
-cybersec-toolkit/
-├── client/                    # React frontend application
-│   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   ├── pages/            # Page components
-│   │   ├── hooks/            # Custom React hooks
-│   │   └── lib/              # Utility functions
-├── server/                   # Express backend application
-│   ├── services/             # Security analysis services
-│   │   ├── password-service.ts    # Real cryptographic analysis
-│   │   ├── phishing-service.ts    # URL threat detection
-│   │   ├── port-service.ts        # Network scanning engine
-│   │   ├── keylogger-service.ts   # Process monitoring
-│   │   └── file-integrity-service.ts # File system monitoring
-│   ├── routes.ts             # API endpoint definitions
-│   └── index.ts              # Server entry point
-├── shared/                   # Shared TypeScript schemas
-└── README.md                 # This file
-```
-
-### Running Tests
-
-```bash
-# Run frontend tests
-npm run test:client
-
-# Run backend tests
-npm run test:server
-
-# Run all tests
-npm test
-```
-
 ### Code Quality
+- TypeScript strict mode
+- ESLint code standards
+- Prettier formatting
+- Comprehensive error handling
 
-The project maintains high code quality with:
+### Testing
+```bash
+npm run test          # Run all tests
+npm run check         # TypeScript validation
+npm run build         # Production build test
+```
 
-- **TypeScript strict mode** for compile-time error catching
-- **ESLint** for code style consistency
-- **Prettier** for code formatting
-- **Pre-commit hooks** for automatic quality checks
+### Contributing
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature-name`
+3. Make changes with tests
+4. Ensure TypeScript compilation
+5. Submit pull request
 
-## 🔐 Security Considerations
+## ⚡ Performance
+
+### Optimized Build
+- Frontend: 379KB (gzipped: 114KB)
+- Backend: 52.7KB
+- Fast Vite development server
+- Efficient production bundling
+
+### Resource Usage
+- Memory: 4GB+ recommended for large scans
+- Network: Stable connection for port scanning
+- CPU: Multi-core for concurrent operations
+- Storage: SSD recommended for file monitoring
+
+## 🔒 Security Considerations
 
 ### Ethical Usage
-This toolkit is designed for:
-- ✅ Security research and education
-- ✅ Authorized penetration testing
-- ✅ Personal system monitoring
-- ✅ Corporate security assessments (with permission)
+✅ Authorized security testing  
+✅ Educational purposes  
+✅ Personal system monitoring  
+✅ Corporate assessments (with permission)
 
 ### Legal Compliance
-Users must ensure compliance with:
-- Local cybersecurity laws and regulations
-- Corporate security policies
-- Terms of service for target systems
-- Responsible disclosure guidelines
+- Follow local cybersecurity laws
+- Respect corporate security policies
+- Comply with target system terms
+- Practice responsible disclosure
 
-### Rate Limiting & Network Respect
-- Built-in delays between network operations
+### Network Respect
+- Built-in scanning delays
 - Configurable concurrency limits
-- Respectful scanning practices
 - Automatic timeout handling
+- Respectful network practices
 
-## 🚧 Limitations
+## 📊 Features Overview
 
-### Network Scanning
-- Requires network access to target systems
-- May be blocked by firewalls or intrusion detection systems
-- Performance depends on network latency and target responsiveness
+| Tool | Analysis Type | Real-time | Risk Scoring |
+|------|---------------|-----------|--------------|
+| Password Analyzer | Cryptographic | ✅ | ✅ |
+| Phishing Detector | URL Analysis | ✅ | ✅ |
+| Port Scanner | Network | ✅ | ✅ |
+| Keylogger Detector | Process | ✅ | ✅ |
+| File Integrity | Filesystem | ✅ | ✅ |
 
-### File Integrity Monitoring
-- Requires file system read permissions
-- Performance scales with directory size
-- May impact system performance during large scans
+## 🤝 Support
 
-### Process Monitoring
-- Requires appropriate system permissions
-- Platform-specific implementations
-- May trigger antivirus false positives
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-### Development Setup
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
-
-### Bug Reports
-Please include:
-- Operating system and version
-- Node.js version
-- Steps to reproduce
-- Expected vs actual behavior
+- 📖 Documentation: Complete API and usage guides
+- 🐛 Bug Reports: GitHub issues with reproduction steps
+- 💡 Feature Requests: Enhancement suggestions welcome
+- 📧 Security: Contact for vulnerability reports
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-For support:
-- 📖 Check the documentation above
-- 🐛 Create an issue for bugs
-- 💡 Submit feature requests
-- 📧 Contact the security team for questions
+MIT License - see [LICENSE](LICENSE) file for details
 
 ## ⚠️ Disclaimer
 
-This toolkit is provided for educational and authorized security testing purposes only. Users are responsible for ensuring legal and ethical use. The developers assume no liability for misuse or damage caused by this software.
+This toolkit is for educational and authorized security testing only. Users are responsible for legal and ethical use. Developers assume no liability for misuse.
 
 ---
 
-**Built with ❤️ for the cybersecurity community**
-
-*Last updated: September 2025*
+**Built for the cybersecurity community**  
+*Production-ready • Secure • Scalable*
