@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Production startup script for SolarSense AI
+ * Production startup script for CyberSec Toolkit
  * Handles environment validation and server initialization
  */
 
