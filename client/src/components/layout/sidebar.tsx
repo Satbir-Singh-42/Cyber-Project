@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                 )}
                 data-testid={`nav-${item.path.replace(/\//g, '-') || 'home'}`}
               >
-                <Icon className="h-8 w-8 min-w-[32px]" />
+                <Icon className="h-[18px] w-[18px] min-w-[18px]" />
                 {!collapsed && (
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{item.label}</div>
@@ -196,7 +196,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
                   onClick={onClose}
                   data-testid={`nav-mobile-${item.path.replace(/\//g, '-') || 'home'}`}
                 >
-                  <Icon className="h-8 w-8 min-w-[32px]" />
+                  <Icon className="h-[18px] w-[18px] min-w-[18px]" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{item.label}</div>
                     <div className={cn(
