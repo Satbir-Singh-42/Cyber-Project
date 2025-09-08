@@ -261,36 +261,17 @@ export function PasswordAnalyzer() {
                 </div>
               </div>
 
-              {/* AI-Powered Suggestions */}
-              {analysis.aiSuggestions && analysis.aiSuggestions.length > 0 && (
-                <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-4 rounded-lg border border-primary/20">
-                  <h4 className="font-medium mb-2 text-primary flex items-center">
-                    <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                    </svg>
-                    AI-Powered Suggestions
-                  </h4>
-                  <ul className="text-sm space-y-2">
-                    {analysis.aiSuggestions.map((suggestion, index) => (
-                      <li key={index} className="flex items-start space-x-2">
-                        <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mt-0.5">
-                          {index + 1}
-                        </span>
-                        <span className="text-foreground">{suggestion}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
               {/* General Suggestions */}
-              {analysis.suggestions.length > 0 && (
+              {(analysis.suggestions.length > 0 || (analysis.aiSuggestions && analysis.aiSuggestions.length > 0)) && (
                 <div className="bg-muted p-4 rounded-lg">
                   <h4 className="font-medium mb-2 text-yellow-500 flex items-center">
                     <Lightbulb className="mr-2 h-4 w-4" />
-                    General Tips
+                    Suggestions
                   </h4>
                   <ul className="text-sm space-y-1 text-muted-foreground">
+                    {analysis.aiSuggestions && analysis.aiSuggestions.length > 0 && (
+                      <li>• {analysis.aiSuggestions[0]}</li>
+                    )}
                     {analysis.suggestions.map((suggestion, index) => (
                       <li key={index}>• {suggestion}</li>
                     ))}

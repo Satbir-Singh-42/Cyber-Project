@@ -57,7 +57,9 @@ export class PasswordService {
     let aiSuggestions: string[] = [];
     try {
       if (this.genAI && score < 80) {
-        aiSuggestions = await this.generateAISuggestions(password, criteria, strength);
+        const fullAiSuggestions = await this.generateAISuggestions(password, criteria, strength);
+        // Only return the first AI suggestion to be integrated with general tips
+        aiSuggestions = fullAiSuggestions.slice(0, 1);
       }
     } catch (error) {
       console.log('AI suggestions failed, using fallback:', error);
