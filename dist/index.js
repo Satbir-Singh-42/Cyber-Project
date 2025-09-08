@@ -9,6 +9,7 @@ import { createServer } from "http";
 import { body, validationResult } from "express-validator";
 
 // server/services/password-service.ts
+import { GoogleGenerativeAI } from "@google/generative-ai";
 var COMMON_PASSWORDS = [
   "password",
   "123456",
@@ -92,20 +93,36 @@ var DICTIONARY_WORDS = [
   "old"
 ];
 var PasswordService = class {
-  analyzePassword(password) {
+  genAI = null;
+  constructor() {
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
+  }
+  async analyzePassword(password) {
     const criteria = this.checkCriteria(password);
     const entropy = this.calculateEntropy(password);
     const score = this.calculateScore(password, criteria, entropy);
     const strength = this.getStrengthLevel(score);
     const suggestions = this.generateSuggestions(password, criteria);
     const crackTime = this.estimateCrackTime(entropy);
+    let aiSuggestions = [];
+    try {
+      if (this.genAI && score < 80) {
+        const fullAiSuggestions = await this.generateAISuggestions(password, criteria, strength);
+        aiSuggestions = fullAiSuggestions.slice(0, 1);
+      }
+    } catch (error) {
+      console.log("AI suggestions failed, using fallback:", error);
+    }
     return {
       score,
       strength,
       criteria,
       entropy,
       suggestions,
-      crackTime
+      crackTime,
+      aiSuggestions: aiSuggestions.length > 0 ? aiSuggestions : void 0
     };
   }
   checkCriteria(password) {
@@ -132,18 +149,19 @@ var PasswordService = class {
   }
   calculateScore(password, criteria, entropy) {
     let score = 0;
-    if (password.length >= 12) score += 25;
-    else if (password.length >= 8) score += 15;
+    if (password.length >= 12) score += 30;
+    else if (password.length >= 10) score += 25;
+    else if (password.length >= 8) score += 20;
     else if (password.length >= 6) score += 10;
-    if (criteria.upperCase) score += 10;
-    if (criteria.lowerCase) score += 10;
-    if (criteria.numbers) score += 10;
-    if (criteria.specialChars) score += 15;
-    if (!criteria.noDictionaryWords) score -= 20;
-    if (entropy >= 60) score += 20;
-    else if (entropy >= 50) score += 15;
+    if (criteria.upperCase) score += 15;
+    if (criteria.lowerCase) score += 15;
+    if (criteria.numbers) score += 15;
+    if (criteria.specialChars) score += 20;
+    if (!criteria.noDictionaryWords) score -= 15;
+    if (entropy >= 50) score += 15;
     else if (entropy >= 40) score += 10;
-    if (this.hasRepeatingPatterns(password)) score -= 10;
+    else if (entropy >= 30) score += 5;
+    if (this.hasRepeatingPatterns(password)) score -= 5;
     return Math.max(0, Math.min(100, score));
   }
   hasRepeatingPatterns(password) {
@@ -211,10 +229,62 @@ var PasswordService = class {
     if (seconds < 31536e5) return `${Math.ceil(seconds / 31536e3)} years`;
     return "Centuries";
   }
+  async generateAISuggestions(password, criteria, strength) {
+    if (!this.genAI) return [];
+    try {
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const prompt = `Current password: "${password}"
+Missing: ${Object.entries(criteria).filter(([key, value]) => !value).map(([key]) => key).join(", ")}
+
+Make 4 TINY improvements to "${password}":
+1. Keep "${password}" mostly the same
+2. Add only what's missing
+3. Keep changes minimal
+
+Examples for "abc123":
+- "Abc123" (just capitalize first letter)
+- "abc123!" (just add one symbol)
+- "abc123xy" (just add 2 letters)
+
+Return only JSON array:
+["tiny change 1", "tiny change 2", "tiny change 3", "tiny change 4"]`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text2 = response.text();
+      console.log("Raw AI response:", text2);
+      text2 = text2.replace(/```json/gi, "").replace(/```/g, "").replace(/^\s*\n/gm, "").trim();
+      const jsonMatch = text2.match(/\[[\s\S]*?\]/);
+      if (jsonMatch) {
+        text2 = jsonMatch[0];
+      }
+      console.log("Cleaned text for parsing:", text2);
+      const suggestions = JSON.parse(text2);
+      if (Array.isArray(suggestions) && suggestions.length <= 4) {
+        return suggestions.slice(0, 4).map((s) => String(s).substring(0, 50));
+      }
+      return [];
+    } catch (error) {
+      if (error.status === 503) {
+        console.log("Gemini API overloaded, using fallback suggestions");
+        return this.getFallbackSuggestions(criteria);
+      }
+      console.log("Error generating AI suggestions:", error.message || error);
+      return this.getFallbackSuggestions(criteria);
+    }
+  }
+  getFallbackSuggestions(criteria) {
+    const fallbacks = [];
+    if (!criteria.upperCase) fallbacks.push("Add one uppercase letter");
+    if (!criteria.numbers) fallbacks.push("Add 1-2 numbers at the end");
+    if (!criteria.specialChars) fallbacks.push("Add one symbol like ! or @");
+    if (!criteria.length) fallbacks.push("Add 2-3 more characters");
+    return fallbacks.slice(0, 4);
+  }
 };
 
 // server/services/phishing-service.ts
 import { URL } from "url";
+import { GoogleGenerativeAI as GoogleGenerativeAI2 } from "@google/generative-ai";
 var SUSPICIOUS_KEYWORDS = [
   "paypal",
   "amazon",
@@ -301,14 +371,24 @@ var LEGITIMATE_DOMAINS = [
   "ebay.com"
 ];
 var PhishingService = class {
-  analyzeUrl(urlString) {
+  genAI = null;
+  constructor() {
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI2(process.env.GEMINI_API_KEY);
+    }
+  }
+  async analyzeUrl(urlString) {
     try {
       const url = new URL(urlString);
       const indicators = this.checkIndicators(url);
-      const score = this.calculateRiskScore(indicators, url);
+      let score = this.calculateRiskScore(indicators, url);
+      const aiAnalysis = await this.getAIAnalysis(urlString, indicators, score);
+      if (aiAnalysis) {
+        score = Math.max(score, aiAnalysis.riskScore);
+      }
       const risk = this.getRiskLevel(score);
-      const details = this.generateDetails(indicators, url);
-      const recommendations = this.generateRecommendations(indicators, risk);
+      const details = this.generateDetails(indicators, url, aiAnalysis);
+      const recommendations = this.generateRecommendations(indicators, risk, aiAnalysis);
       return {
         score,
         risk,
@@ -433,7 +513,43 @@ var PhishingService = class {
     if (score >= 30) return "medium";
     return "low";
   }
-  generateDetails(indicators, url) {
+  async getAIAnalysis(url, indicators, currentScore) {
+    if (!this.genAI) return null;
+    try {
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const prompt = `Analyze this URL for phishing threats: "${url}"
+
+Current analysis: Score ${currentScore}/100
+Indicators: ${JSON.stringify(indicators, null, 2)}
+
+As a cybersecurity expert, provide:
+1. Overall risk score (0-100)
+2. Specific threats detected
+3. Main warning signs
+4. Safety recommendation
+
+Return JSON format:
+{
+  "riskScore": number,
+  "threats": ["threat1", "threat2"],
+  "warnings": ["warning1", "warning2"],
+  "recommendation": "safe/caution/danger"
+}`;
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text2 = response.text();
+      text2 = text2.replace(/```json/gi, "").replace(/```/g, "").trim();
+      const jsonMatch = text2.match(/\{[\s\S]*?\}/);
+      if (jsonMatch) {
+        text2 = jsonMatch[0];
+      }
+      return JSON.parse(text2);
+    } catch (error) {
+      console.log("AI phishing analysis failed:", error);
+      return null;
+    }
+  }
+  generateDetails(indicators, url, aiAnalysis) {
     const details = [];
     if (indicators.ipBasedUrl) {
       details.push("URL uses IP address instead of domain name");
@@ -461,12 +577,17 @@ var PhishingService = class {
         details.push("Unable to determine domain age");
         break;
     }
+    if (aiAnalysis?.threats) {
+      aiAnalysis.threats.forEach((threat) => {
+        details.push(`AI Detected: ${threat}`);
+      });
+    }
     if (details.length === 0) {
       details.push("No obvious phishing indicators detected");
     }
     return details;
   }
-  generateRecommendations(indicators, risk) {
+  generateRecommendations(indicators, risk, aiAnalysis) {
     const recommendations = [];
     if (risk === "critical" || risk === "high") {
       recommendations.push("DO NOT enter personal information on this site");
@@ -481,6 +602,11 @@ var PhishingService = class {
     }
     if (indicators.suspiciousKeywords) {
       recommendations.push("Be cautious of urgent language and requests for immediate action");
+    }
+    if (aiAnalysis?.recommendation === "danger") {
+      recommendations.unshift("AI ALERT: High phishing risk detected - DO NOT PROCEED");
+    } else if (aiAnalysis?.recommendation === "caution") {
+      recommendations.unshift("AI CAUTION: Proceed with extreme caution");
     }
     if (risk === "low") {
       recommendations.push("Always verify URLs match the official website");
@@ -1378,7 +1504,7 @@ async function registerRoutes(app2) {
   ], async (req, res) => {
     try {
       const { password } = passwordAnalysisRequestSchema.parse(req.body);
-      const analysis = passwordService.analyzePassword(password);
+      const analysis = await passwordService.analyzePassword(password);
       res.json(analysis);
     } catch (error) {
       res.status(400).json({ message: "Invalid password input" });
@@ -1390,7 +1516,7 @@ async function registerRoutes(app2) {
   ], async (req, res) => {
     try {
       const { url } = phishingAnalysisRequestSchema.parse(req.body);
-      const analysis = phishingService.analyzeUrl(url);
+      const analysis = await phishingService.analyzeUrl(url);
       res.json(analysis);
     } catch (error) {
       res.status(400).json({ message: "Invalid URL input" });
@@ -1601,6 +1727,7 @@ function serveStatic(app2) {
 }
 
 // server/index.ts
+process.env.GEMINI_API_KEY = "AIzaSyCoPXGwdOwVTZX_rqJ_W3v1A7wmqDZmtgY";
 var app = express2();
 app.set("trust proxy", 1);
 app.use(helmet({
@@ -1626,8 +1753,8 @@ app.use(helmet({
 var limiter = rateLimit({
   windowMs: 15 * 60 * 1e3,
   // 15 minutes
-  max: 100,
-  // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === "development" ? 1e3 : 100,
+  // More generous in development
   message: {
     error: "Too many requests from this IP, please try again later."
   },
@@ -1637,8 +1764,8 @@ var limiter = rateLimit({
 var securityLimiter = rateLimit({
   windowMs: 15 * 60 * 1e3,
   // 15 minutes
-  max: 20,
-  // Limit security endpoints to 20 requests per windowMs
+  max: process.env.NODE_ENV === "development" ? 100 : 20,
+  // More generous in development
   message: {
     error: "Too many security scan requests from this IP, please try again later."
   },
