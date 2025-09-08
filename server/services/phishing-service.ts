@@ -1,4 +1,5 @@
 import { URL } from 'url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface PhishingAnalysis {
   score: number;
@@ -38,14 +39,28 @@ const LEGITIMATE_DOMAINS = [
 ];
 
 export class PhishingService {
-  analyzeUrl(urlString: string): PhishingAnalysis {
+  private genAI: GoogleGenerativeAI | null = null;
+
+  constructor() {
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
+  }
+  async analyzeUrl(urlString: string): Promise<PhishingAnalysis> {
     try {
       const url = new URL(urlString);
       const indicators = this.checkIndicators(url);
-      const score = this.calculateRiskScore(indicators, url);
+      let score = this.calculateRiskScore(indicators, url);
+      
+      // Enhance with AI analysis
+      const aiAnalysis = await this.getAIAnalysis(urlString, indicators, score);
+      if (aiAnalysis) {
+        score = Math.max(score, aiAnalysis.riskScore);
+      }
+      
       const risk = this.getRiskLevel(score);
-      const details = this.generateDetails(indicators, url);
-      const recommendations = this.generateRecommendations(indicators, risk);
+      const details = this.generateDetails(indicators, url, aiAnalysis);
+      const recommendations = this.generateRecommendations(indicators, risk, aiAnalysis);
 
       return {
         score,
@@ -199,7 +214,50 @@ export class PhishingService {
     return 'low';
   }
 
-  private generateDetails(indicators: PhishingAnalysis['indicators'], url: URL): string[] {
+  private async getAIAnalysis(url: string, indicators: any, currentScore: number) {
+    if (!this.genAI) return null;
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      
+      const prompt = `Analyze this URL for phishing threats: "${url}"
+
+Current analysis: Score ${currentScore}/100
+Indicators: ${JSON.stringify(indicators, null, 2)}
+
+As a cybersecurity expert, provide:
+1. Overall risk score (0-100)
+2. Specific threats detected
+3. Main warning signs
+4. Safety recommendation
+
+Return JSON format:
+{
+  "riskScore": number,
+  "threats": ["threat1", "threat2"],
+  "warnings": ["warning1", "warning2"],
+  "recommendation": "safe/caution/danger"
+}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text();
+      
+      // Clean up response
+      text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const jsonMatch = text.match(/\{[\s\S]*?\}/);
+      if (jsonMatch) {
+        text = jsonMatch[0];
+      }
+      
+      return JSON.parse(text);
+    } catch (error) {
+      console.log('AI phishing analysis failed:', error);
+      return null;
+    }
+  }
+
+  private generateDetails(indicators: PhishingAnalysis['indicators'], url: URL, aiAnalysis?: any): string[] {
     const details: string[] = [];
 
     if (indicators.ipBasedUrl) {
@@ -230,6 +288,13 @@ export class PhishingService {
         break;
     }
 
+    // Add AI-detected threats
+    if (aiAnalysis?.threats) {
+      aiAnalysis.threats.forEach((threat: string) => {
+        details.push(`AI Detected: ${threat}`);
+      });
+    }
+
     if (details.length === 0) {
       details.push('No obvious phishing indicators detected');
     }
@@ -237,7 +302,7 @@ export class PhishingService {
     return details;
   }
 
-  private generateRecommendations(indicators: PhishingAnalysis['indicators'], risk: PhishingAnalysis['risk']): string[] {
+  private generateRecommendations(indicators: PhishingAnalysis['indicators'], risk: PhishingAnalysis['risk'], aiAnalysis?: any): string[] {
     const recommendations: string[] = [];
 
     if (risk === 'critical' || risk === 'high') {
@@ -256,6 +321,13 @@ export class PhishingService {
 
     if (indicators.suspiciousKeywords) {
       recommendations.push('Be cautious of urgent language and requests for immediate action');
+    }
+
+    // Add AI recommendations
+    if (aiAnalysis?.recommendation === 'danger') {
+      recommendations.unshift('🚨 AI ALERT: High phishing risk detected - DO NOT PROCEED');
+    } else if (aiAnalysis?.recommendation === 'caution') {
+      recommendations.unshift('⚠️ AI CAUTION: Proceed with extreme caution');
     }
 
     if (risk === 'low') {
