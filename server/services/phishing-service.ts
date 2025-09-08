@@ -325,9 +325,9 @@ Return JSON format:
 
     // Add AI recommendations
     if (aiAnalysis?.recommendation === 'danger') {
-      recommendations.unshift('🚨 AI ALERT: High phishing risk detected - DO NOT PROCEED');
+      recommendations.unshift('AI ALERT: High phishing risk detected - DO NOT PROCEED');
     } else if (aiAnalysis?.recommendation === 'caution') {
-      recommendations.unshift('⚠️ AI CAUTION: Proceed with extreme caution');
+      recommendations.unshift('AI CAUTION: Proceed with extreme caution');
     }
 
     if (risk === 'low') {
