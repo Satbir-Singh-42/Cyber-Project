@@ -229,11 +229,28 @@ Generate exactly 4 specific, actionable password improvement suggestions. Each s
 3. Practical and implementable
 4. Focus on the weakest areas
 
-Return only the 4 suggestions as a JSON array of strings, nothing else.`;
+Return only the 4 suggestions as a JSON array of strings. Do not wrap in markdown code blocks. Example format:
+["Add uppercase letters: MyPass123!", "Include special characters: MyPass@123", "Make it longer: MyPassword2024!", "Remove common words: Tr3@sure2024"]`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const text = response.text();
+      let text = response.text();
+      
+      console.log('Raw AI response:', text);
+      
+      // Clean up the response - remove markdown code blocks and extra formatting
+      text = text.replace(/```json/gi, '')
+                 .replace(/```/g, '')
+                 .replace(/^\s*\n/gm, '')
+                 .trim();
+      
+      // Extract JSON array if it's embedded in text
+      const jsonMatch = text.match(/\[[\s\S]*?\]/);
+      if (jsonMatch) {
+        text = jsonMatch[0];
+      }
+      
+      console.log('Cleaned text for parsing:', text);
       
       // Parse the JSON response
       const suggestions = JSON.parse(text);
@@ -244,9 +261,25 @@ Return only the 4 suggestions as a JSON array of strings, nothing else.`;
       }
       
       return [];
-    } catch (error) {
-      console.log('Error generating AI suggestions:', error);
-      return [];
+    } catch (error: any) {
+      if (error.status === 503) {
+        console.log('Gemini API overloaded, using fallback suggestions');
+        // Return fallback suggestions when API is overloaded
+        return this.getFallbackSuggestions(criteria);
+      }
+      console.log('Error generating AI suggestions:', error.message || error);
+      return this.getFallbackSuggestions(criteria);
     }
+  }
+
+  private getFallbackSuggestions(criteria: any): string[] {
+    const fallbacks: string[] = [];
+    
+    if (!criteria.upperCase) fallbacks.push("Add uppercase: Change 'p' to 'P'");
+    if (!criteria.numbers) fallbacks.push("Include numbers: Add '123' at end");
+    if (!criteria.specialChars) fallbacks.push("Add symbols: Include '@' or '!'");
+    if (!criteria.length) fallbacks.push("Make longer: Add 4+ characters");
+    
+    return fallbacks.slice(0, 4);
   }
 }
