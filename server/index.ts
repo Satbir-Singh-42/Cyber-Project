@@ -29,10 +29,10 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Rate limiting
+// Rate limiting - More generous limits for development
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // More generous in development
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
@@ -43,7 +43,7 @@ const limiter = rateLimit({
 // Slower rate limiting for security endpoints
 const securityLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit security endpoints to 20 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 100 : 20, // More generous in development
   message: {
     error: 'Too many security scan requests from this IP, please try again later.'
   },
