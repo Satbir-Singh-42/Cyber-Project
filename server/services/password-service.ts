@@ -216,21 +216,23 @@ export class PasswordService {
     try {
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      const prompt = `You are a cybersecurity expert helping improve password strength. 
+      const prompt = `You are a cybersecurity expert. Current password: "${password}" (Strength: ${strength})
 
-Current password analysis:
-- Strength: ${strength}
-- Missing criteria: ${JSON.stringify(criteria, null, 2)}
-- Current password: "${password}"
+Missing criteria: ${JSON.stringify(criteria, null, 2)}
 
-Generate exactly 4 specific, actionable password improvement suggestions. Each suggestion should be:
-1. A concrete example or modification 
-2. Maximum 50 characters long
-3. Practical and implementable
-4. Focus on the weakest areas
+Generate exactly 4 SMALL, incremental improvements to THIS EXACT password. Each suggestion should:
+1. Keep most of the original password unchanged
+2. Make only 1-2 small modifications  
+3. Be maximum 40 characters
+4. Focus on missing criteria only
 
-Return only the 4 suggestions as a JSON array of strings. Do not wrap in markdown code blocks. Example format:
-["Add uppercase letters: MyPass123!", "Include special characters: MyPass@123", "Make it longer: MyPassword2024!", "Remove common words: Tr3@sure2024"]`;
+Examples of GOOD suggestions for "abc123":
+- "Add uppercase: Abc123"
+- "Add symbol: abc123!"
+- "Make longer: abc123def"
+
+Return only a JSON array of 4 strings, no markdown:
+["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4"]`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -275,10 +277,10 @@ Return only the 4 suggestions as a JSON array of strings. Do not wrap in markdow
   private getFallbackSuggestions(criteria: any): string[] {
     const fallbacks: string[] = [];
     
-    if (!criteria.upperCase) fallbacks.push("Add uppercase: Change 'p' to 'P'");
-    if (!criteria.numbers) fallbacks.push("Include numbers: Add '123' at end");
-    if (!criteria.specialChars) fallbacks.push("Add symbols: Include '@' or '!'");
-    if (!criteria.length) fallbacks.push("Make longer: Add 4+ characters");
+    if (!criteria.upperCase) fallbacks.push("Add one uppercase letter");
+    if (!criteria.numbers) fallbacks.push("Add 1-2 numbers at the end");
+    if (!criteria.specialChars) fallbacks.push("Add one symbol like ! or @");
+    if (!criteria.length) fallbacks.push("Add 2-3 more characters");
     
     return fallbacks.slice(0, 4);
   }
