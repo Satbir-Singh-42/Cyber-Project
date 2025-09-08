@@ -26,6 +26,7 @@ interface PhishingAnalysis {
 export function PhishingDetector() {
   const [url, setUrl] = useState('');
   const [analysis, setAnalysis] = useState<PhishingAnalysis | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const analyzeUrlMutation = useMutation({
     mutationFn: async (url: string) => {
@@ -34,15 +35,37 @@ export function PhishingDetector() {
     },
     onSuccess: (data) => {
       setAnalysis(data);
+      setError(null);
     },
     onError: (error: any) => {
       console.error('Failed to analyze URL:', error);
+      setError('Please enter a valid URL (e.g., https://example.com)');
+      setAnalysis(null);
     },
   });
 
   const handleAnalyze = () => {
-    if (url.trim()) {
-      analyzeUrlMutation.mutate(url.trim());
+    const trimmedUrl = url.trim();
+    
+    // Basic URL validation
+    if (!trimmedUrl) {
+      setError('Please enter a URL to analyze');
+      return;
+    }
+    
+    // Add protocol if missing
+    let urlToAnalyze = trimmedUrl;
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      urlToAnalyze = 'https://' + trimmedUrl;
+    }
+    
+    // Simple URL format check
+    try {
+      new URL(urlToAnalyze);
+      setError(null);
+      analyzeUrlMutation.mutate(urlToAnalyze);
+    } catch {
+      setError('Please enter a valid URL (e.g., example.com or https://example.com)');
     }
   };
 
@@ -105,6 +128,15 @@ export function PhishingDetector() {
             <span className="hidden sm:inline">{analyzeUrlMutation.isPending ? "Analyzing..." : "Analyze URL"}</span>
             <span className="sm:hidden">{analyzeUrlMutation.isPending ? "Analyzing..." : "Analyze"}</span>
           </Button>
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                <span className="text-sm text-destructive font-medium">{error}</span>
+              </div>
+            </div>
+          )}
 
           {analysis && (
             <>
