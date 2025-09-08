@@ -107,27 +107,28 @@ export class PasswordService {
   private calculateScore(password: string, criteria: any, entropy: number): number {
     let score = 0;
 
-    // Length scoring
-    if (password.length >= 12) score += 25;
-    else if (password.length >= 8) score += 15;
+    // Length scoring (more generous)
+    if (password.length >= 12) score += 30;
+    else if (password.length >= 10) score += 25;
+    else if (password.length >= 8) score += 20;
     else if (password.length >= 6) score += 10;
 
-    // Character variety scoring
-    if (criteria.upperCase) score += 10;
-    if (criteria.lowerCase) score += 10;
-    if (criteria.numbers) score += 10;
-    if (criteria.specialChars) score += 15;
+    // Character variety scoring (more generous)
+    if (criteria.upperCase) score += 15;
+    if (criteria.lowerCase) score += 15;
+    if (criteria.numbers) score += 15;
+    if (criteria.specialChars) score += 20;
 
     // Dictionary words penalty
-    if (!criteria.noDictionaryWords) score -= 20;
+    if (!criteria.noDictionaryWords) score -= 15;
 
-    // Entropy bonus
-    if (entropy >= 60) score += 20;
-    else if (entropy >= 50) score += 15;
+    // Entropy bonus (adjusted)
+    if (entropy >= 50) score += 15;
     else if (entropy >= 40) score += 10;
+    else if (entropy >= 30) score += 5;
 
     // Repetition penalty
-    if (this.hasRepeatingPatterns(password)) score -= 10;
+    if (this.hasRepeatingPatterns(password)) score -= 5;
 
     return Math.max(0, Math.min(100, score));
   }
@@ -218,23 +219,21 @@ export class PasswordService {
     try {
       const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
-      const prompt = `You are a cybersecurity expert. Current password: "${password}" (Strength: ${strength})
+      const prompt = `Current password: "${password}"
+Missing: ${Object.entries(criteria).filter(([key, value]) => !value).map(([key]) => key).join(', ')}
 
-Missing criteria: ${JSON.stringify(criteria, null, 2)}
+Make 4 TINY improvements to "${password}":
+1. Keep "${password}" mostly the same
+2. Add only what's missing
+3. Keep changes minimal
 
-Generate exactly 4 SMALL, incremental improvements to THIS EXACT password. Each suggestion should:
-1. Keep most of the original password unchanged
-2. Make only 1-2 small modifications  
-3. Be maximum 40 characters
-4. Focus on missing criteria only
+Examples for "abc123":
+- "Abc123" (just capitalize first letter)
+- "abc123!" (just add one symbol)
+- "abc123xy" (just add 2 letters)
 
-Examples of GOOD suggestions for "abc123":
-- "Add uppercase: Abc123"
-- "Add symbol: abc123!"
-- "Make longer: abc123def"
-
-Return only a JSON array of 4 strings, no markdown:
-["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4"]`;
+Return only JSON array:
+["tiny change 1", "tiny change 2", "tiny change 3", "tiny change 4"]`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
