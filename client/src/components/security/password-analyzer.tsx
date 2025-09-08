@@ -201,9 +201,9 @@ export function PasswordAnalyzer() {
                   </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2 mb-3 overflow-hidden">
-                  <Progress 
-                    value={analysis.score} 
-                    className={`h-2 transition-all duration-300 ${getProgressColor(analysis.score)}`}
+                  <div 
+                    className={`h-full rounded-full transition-all duration-300 ${getProgressColor(analysis.score)}`}
+                    style={{ width: `${Math.min(100, Math.max(0, analysis.score))}%` }}
                   />
                 </div>
                 
