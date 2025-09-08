@@ -94,9 +94,11 @@ export function PasswordAnalyzer() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [analysis, setAnalysis] = useState<PasswordAnalysis | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const analyzePasswordMutation = useMutation({
     mutationFn: async (password: string) => {
+      setIsAnalyzing(true);
       try {
         // Try backend API first
         const response = await apiRequest('POST', '/api/security/password-analysis', { password });
@@ -109,18 +111,22 @@ export function PasswordAnalyzer() {
     },
     onSuccess: (data) => {
       setAnalysis(data);
+      setIsAnalyzing(false);
     },
     onError: (error: any) => {
       console.error('Failed to analyze password:', error);
+      setIsAnalyzing(false);
     },
   });
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     if (value.length > 0) {
+      setIsAnalyzing(true);
       analyzePasswordMutation.mutate(value);
     } else {
       setAnalysis(null);
+      setIsAnalyzing(false);
     }
   };
 
@@ -271,7 +277,7 @@ export function PasswordAnalyzer() {
             </>
           )}
 
-          {analyzePasswordMutation.isPending && (
+          {isAnalyzing && !analysis && (
             <div className="bg-secondary p-4 rounded-lg">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
