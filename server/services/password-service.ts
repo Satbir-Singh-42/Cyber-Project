@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface PasswordAnalysis {
   score: number;
@@ -14,6 +15,7 @@ export interface PasswordAnalysis {
   entropy: number;
   suggestions: string[];
   crackTime: string;
+  aiSuggestions?: string[];
 }
 
 const COMMON_PASSWORDS = [
@@ -35,13 +37,31 @@ const DICTIONARY_WORDS = [
 ];
 
 export class PasswordService {
-  analyzePassword(password: string): PasswordAnalysis {
+  private genAI: GoogleGenerativeAI | null = null;
+
+  constructor() {
+    if (process.env.GEMINI_API_KEY) {
+      this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    }
+  }
+
+  async analyzePassword(password: string): Promise<PasswordAnalysis> {
     const criteria = this.checkCriteria(password);
     const entropy = this.calculateEntropy(password);
     const score = this.calculateScore(password, criteria, entropy);
     const strength = this.getStrengthLevel(score);
     const suggestions = this.generateSuggestions(password, criteria);
     const crackTime = this.estimateCrackTime(entropy);
+    
+    // Generate AI-powered suggestions if Gemini is available
+    let aiSuggestions: string[] = [];
+    try {
+      if (this.genAI && score < 80) {
+        aiSuggestions = await this.generateAISuggestions(password, criteria, strength);
+      }
+    } catch (error) {
+      console.log('AI suggestions failed, using fallback:', error);
+    }
 
     return {
       score,
@@ -49,7 +69,8 @@ export class PasswordService {
       criteria,
       entropy,
       suggestions,
-      crackTime
+      crackTime,
+      aiSuggestions: aiSuggestions.length > 0 ? aiSuggestions : undefined
     };
   }
 
@@ -187,5 +208,45 @@ export class PasswordService {
     if (seconds < 3153600000) return `${Math.ceil(seconds / 31536000)} years`;
     
     return 'Centuries';
+  }
+
+  private async generateAISuggestions(password: string, criteria: any, strength: string): Promise<string[]> {
+    if (!this.genAI) return [];
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      
+      const prompt = `You are a cybersecurity expert helping improve password strength. 
+
+Current password analysis:
+- Strength: ${strength}
+- Missing criteria: ${JSON.stringify(criteria, null, 2)}
+- Current password: "${password}"
+
+Generate exactly 4 specific, actionable password improvement suggestions. Each suggestion should be:
+1. A concrete example or modification 
+2. Maximum 50 characters long
+3. Practical and implementable
+4. Focus on the weakest areas
+
+Return only the 4 suggestions as a JSON array of strings, nothing else.`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Parse the JSON response
+      const suggestions = JSON.parse(text);
+      
+      // Ensure we have exactly 4 suggestions and they're strings
+      if (Array.isArray(suggestions) && suggestions.length <= 4) {
+        return suggestions.slice(0, 4).map(s => String(s).substring(0, 50));
+      }
+      
+      return [];
+    } catch (error) {
+      console.log('Error generating AI suggestions:', error);
+      return [];
+    }
   }
 }

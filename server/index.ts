@@ -1,4 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
+
+// Set Gemini API key
+process.env.GEMINI_API_KEY = "AIzaSyCoPXGwdOwVTZX_rqJ_W3v1A7wmqDZmtgY";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";

@@ -44,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   ], async (req: Request, res: Response) => {
     try {
       const { password } = passwordAnalysisRequestSchema.parse(req.body);
-      const analysis = passwordService.analyzePassword(password);
+      const analysis = await passwordService.analyzePassword(password);
       res.json(analysis);
     } catch (error: any) {
       res.status(400).json({ message: 'Invalid password input' });
