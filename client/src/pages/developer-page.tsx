@@ -9,21 +9,21 @@ export default function DeveloperPage() {
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "www.linkedin.com/in/satbir-singh-486587254",
       email: "satbirsinghubhi@gmail.com",
-      image: "/images/Satbir Singh.png"
+      image: "client/src/images/Satbir Singh.png"
     },
     {
       name: "Developer 2",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
       email: "developer2@example.com",
-      image: "/images/Satbir Singh.png"
+      image: "client/src/images/Satbir Singh.png"
     },
     {
       name: "Developer 3",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer3@example.com"
-       image: "/images/Satbir Singh.png"
+      email: "satbir@example.com",
+      image: "client/src/images/Satbir Singh.png"
     }
   ];
 
