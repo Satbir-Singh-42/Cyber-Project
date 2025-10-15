@@ -44,3 +44,8 @@
 [x] 44. Created 250+ typosquatting variations covering major secure websites
 [x] 45. Protection covers: tech giants, social media, banking, finance, crypto, streaming, government sites
 [x] 46. Combined pattern matching with Levenshtein distance for maximum detection coverage
+[x] 47. Added visible Google Safe Browsing verification badge in the UI
+[x] 48. Enhanced frontend to show all security checks including Google API verification
+[x] 49. Implemented detailed server-side logging for all API checks and results
+[x] 50. Added threat type logging when malicious URLs are detected by Google
+[x] 51. Users can now see when their API key is being used to verify URLs

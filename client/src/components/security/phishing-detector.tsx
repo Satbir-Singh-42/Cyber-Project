@@ -18,9 +18,17 @@ interface PhishingAnalysis {
     suspiciousKeywords: boolean;
     missingHttps: boolean;
     domainAge: 'new' | 'medium' | 'established' | 'unknown';
+    homoglyphDetected: boolean;
+    googleSafeBrowsing?: boolean;
   };
   details: string[];
   recommendations: string[];
+  metadata: {
+    hostname: string;
+    tld: string;
+    analyzedAt: string;
+    googleSafeBrowsingChecked?: boolean;
+  };
 }
 
 export function PhishingDetector() {
@@ -113,6 +121,16 @@ export function PhishingDetector() {
 
           {analysis && (
             <>
+              {/* Google Safe Browsing Status */}
+              {analysis.metadata.googleSafeBrowsingChecked && (
+                <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg mb-3">
+                  <div className="flex items-center space-x-2 text-sm">
+                    <Check className="h-4 w-4 text-blue-500" />
+                    <span className="text-blue-500 font-medium">✓ Verified by Google Safe Browsing API</span>
+                  </div>
+                </div>
+              )}
+
               {/* Analysis Results */}
               <div className="bg-secondary p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
@@ -166,6 +184,24 @@ export function PhishingDetector() {
                       <X className="h-4 w-4 text-destructive" />
                     )}
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Typosquatting/Lookalike</span>
+                    {!analysis.indicators.homoglyphDetected ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  {analysis.metadata.googleSafeBrowsingChecked && (
+                    <div className="flex items-center justify-between">
+                      <span>Google Safe Browsing</span>
+                      {!analysis.indicators.googleSafeBrowsing ? (
+                        <Check className="h-4 w-4 text-accent" />
+                      ) : (
+                        <X className="h-4 w-4 text-destructive" />
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

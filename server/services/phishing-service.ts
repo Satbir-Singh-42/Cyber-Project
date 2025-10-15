@@ -136,12 +136,18 @@ export class PhishingService {
       let googleSafeBrowsingChecked = false;
       
       if (this.API_KEY) {
+        console.log(`[Phishing Service] Checking URL with Google Safe Browsing API: ${urlString}`);
         const result = await this.checkGoogleSafeBrowsing(urlString);
         if (result.success) {
           googleSafeBrowsingThreat = result.isThreat;
           googleSafeBrowsingChecked = true;
           indicators.googleSafeBrowsing = googleSafeBrowsingThreat;
+          console.log(`[Phishing Service] Google API verification complete - Threat detected: ${googleSafeBrowsingThreat}`);
+        } else {
+          console.log(`[Phishing Service] Google API check failed, using heuristic analysis only`);
         }
+      } else {
+        console.log(`[Phishing Service] No Google API key configured, using heuristic analysis only`);
       }
 
       const score = this.calculateRiskScore(indicators);
@@ -224,6 +230,13 @@ export class PhishingService {
 
       const data = await response.json();
       const isThreat = data.matches && data.matches.length > 0;
+      
+      if (isThreat) {
+        console.log(`[Google Safe Browsing] ⚠️ THREAT DETECTED for URL: ${url}`);
+        console.log(`[Google Safe Browsing] Threat types: ${data.matches.map((m: any) => m.threatType).join(', ')}`);
+      } else {
+        console.log(`[Google Safe Browsing] ✓ URL verified as safe: ${url}`);
+      }
       
       // Cache the result
       this.safeBrowsingCache.set(url, {
