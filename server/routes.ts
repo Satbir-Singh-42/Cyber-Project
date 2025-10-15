@@ -218,6 +218,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health check endpoint
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Check if all services are available
+      const services = {
+        passwordService: !!passwordService,
+        phishingService: !!phishingService,
+        portService: !!portService,
+        keyloggerService: !!keyloggerService,
+        fileIntegrityService: !!fileIntegrityService
+      };
+      
+      const allServicesReady = Object.values(services).every(status => status === true);
+      
+      res.json({ 
+        status: allServicesReady ? 'ready' : 'not-ready',
+        services,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        status: 'not-ready',
+        message: error.message 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

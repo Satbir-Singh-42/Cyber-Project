@@ -16,13 +16,17 @@ import {
 export default function Dashboard() {
   const [systemStatus, setSystemStatus] = useState<'ready' | 'not-ready'>('ready');
 
-  // Simulate system status check
+  // Check actual system health
   useEffect(() => {
-    const checkSystemStatus = () => {
-      // In a real app, this would check actual system health
-      // For demo purposes, we'll simulate changing status
-      const isReady = Math.random() > 0.3; // 70% chance of being ready
-      setSystemStatus(isReady ? 'ready' : 'not-ready');
+    const checkSystemStatus = async () => {
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        setSystemStatus(data.status);
+      } catch (error) {
+        console.error('Health check failed:', error);
+        setSystemStatus('not-ready');
+      }
     };
 
     checkSystemStatus();
