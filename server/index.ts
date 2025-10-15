@@ -29,21 +29,33 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// Rate limiting
+// Rate limiting for API routes only
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for static assets and HMR in development
+    return req.path.startsWith('/@') || 
+           req.path.startsWith('/node_modules') || 
+           req.path.endsWith('.js') || 
+           req.path.endsWith('.css') || 
+           req.path.endsWith('.map') ||
+           req.path.endsWith('.svg') ||
+           req.path.endsWith('.png') ||
+           req.path.endsWith('.jpg') ||
+           req.path.endsWith('.ico');
+  }
 });
 
 // Slower rate limiting for security endpoints
 const securityLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit security endpoints to 20 requests per windowMs
+  max: process.env.NODE_ENV === 'development' ? 200 : 20, // More lenient in development
   message: {
     error: 'Too many security scan requests from this IP, please try again later.'
   },
@@ -59,7 +71,7 @@ const speedLimiter = slowDown({
   validate: { delayMs: false }, // Disable deprecation warning
 });
 
-app.use(limiter);
+app.use('/api', limiter);
 app.use('/api/security', securityLimiter);
 app.use('/api/security', speedLimiter);
 
