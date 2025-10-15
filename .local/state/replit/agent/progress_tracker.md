@@ -49,3 +49,6 @@
 [x] 49. Implemented detailed server-side logging for all API checks and results
 [x] 50. Added threat type logging when malicious URLs are detected by Google
 [x] 51. Users can now see when their API key is being used to verify URLs
+[x] 52. Added Figma and 9 other design/productivity tools to legitimate domains list
+[x] 53. Created typosquatting patterns for Figma, Slack, Zoom, Discord, Notion, Trello, Canva
+[x] 54. Fixed detection for figmo.com and similar lookalike domains

@@ -67,7 +67,9 @@ const LEGITIMATE_DOMAINS = [
   // Government & Education
   "irs.gov", "usa.gov", "gov.uk", "mit.edu", "stanford.edu",
   // Security & Services
-  "adobe.com", "zoom.us", "slack.com", "discord.com", "notion.so", "canva.com"
+  "adobe.com", "zoom.us", "slack.com", "discord.com", "notion.so", "canva.com",
+  // Design & Productivity
+  "figma.com", "sketch.com", "invision.com", "miro.com", "trello.com", "asana.com", "monday.com", "airtable.com", "clickup.com"
 ];
 
 // Common typosquatting variations
@@ -112,7 +114,16 @@ const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
   
   // Crypto
   "coinbase.com": ["c0inbase.com", "coinbasse.com", "coinbas3.com", "colnbase.com"],
-  "binance.com": ["blnance.com", "binanse.com", "binannce.com", "binnance.com"]
+  "binance.com": ["blnance.com", "binanse.com", "binannce.com", "binnance.com"],
+  
+  // Design & Productivity
+  "figma.com": ["figmo.com", "flgma.com", "figm.com", "figmaa.com", "fiqma.com", "figna.com"],
+  "slack.com": ["slak.com", "sIack.com", "slck.com", "s1ack.com", "slackk.com"],
+  "zoom.us": ["zo0m.us", "zoom.com", "z00m.us", "zom.us", "zooom.us"],
+  "discord.com": ["discrod.com", "dlscord.com", "disc0rd.com", "disord.com", "discordd.com"],
+  "notion.so": ["notion.com", "notlon.so", "noti0n.so", "notionn.so"],
+  "trello.com": ["trelo.com", "trel1o.com", "tre11o.com", "trello.co"],
+  "canva.com": ["canv.com", "canva.co", "canvva.com", "cana.com"]
 };
 
 // Cache for Google Safe Browsing results (1 hour TTL)
