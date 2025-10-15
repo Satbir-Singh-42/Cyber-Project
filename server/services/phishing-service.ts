@@ -326,8 +326,11 @@ export class PhishingService {
     // This prevents false positives from legitimate URLs with keywords in paths
     const lower = hostname.toLowerCase();
     
-    // Don't flag legitimate domains
-    if (LEGITIMATE_DOMAINS.includes(lower)) {
+    // Normalize hostname by removing www. prefix
+    const normalizedHostname = lower.replace(/^www\./, '');
+    
+    // Don't flag legitimate domains (check both with and without www.)
+    if (LEGITIMATE_DOMAINS.includes(lower) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
       return false;
     }
     
@@ -336,7 +339,12 @@ export class PhishingService {
   }
 
   private estimateDomainAge(hostname: string): PhishingAnalysis["indicators"]["domainAge"] {
-    if (LEGITIMATE_DOMAINS.includes(hostname)) return "established";
+    // Normalize hostname by removing www. prefix
+    const normalizedHostname = hostname.replace(/^www\./, '');
+    
+    if (LEGITIMATE_DOMAINS.includes(hostname) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+      return "established";
+    }
 
     const tld = hostname.split(".").pop() || "";
     if (["tk", "ml", "ga", "cf", "gq"].includes(tld)) return "new";
@@ -352,14 +360,17 @@ export class PhishingService {
   }
 
   private isTyposquatting(hostname: string): boolean {
+    // Normalize hostname by removing www. prefix
+    const normalizedHostname = hostname.replace(/^www\./, '');
+    
     // If it's a legitimate domain, it's not typosquatting
-    if (LEGITIMATE_DOMAINS.includes(hostname)) {
+    if (LEGITIMATE_DOMAINS.includes(hostname) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
       return false;
     }
 
     // Check if hostname is a known typosquatting variation
     for (const [legitimate, typos] of Object.entries(TYPOSQUATTING_PATTERNS)) {
-      if (typos.includes(hostname)) {
+      if (typos.includes(hostname) || typos.includes(normalizedHostname)) {
         return true;
       }
     }
@@ -367,7 +378,8 @@ export class PhishingService {
     // Check for Levenshtein distance (simple similarity check)
     // Only flag if similar to legitimate domain but not exact match
     for (const legitimateDomain of LEGITIMATE_DOMAINS) {
-      if (this.calculateLevenshteinDistance(hostname, legitimateDomain) <= 2 && hostname !== legitimateDomain) {
+      const distance = this.calculateLevenshteinDistance(normalizedHostname, legitimateDomain);
+      if (distance <= 2 && normalizedHostname !== legitimateDomain) {
         return true;
       }
     }
