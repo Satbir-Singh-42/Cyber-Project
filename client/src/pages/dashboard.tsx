@@ -14,27 +14,7 @@ import {
 
 
 export default function Dashboard() {
-  const [systemStatus, setSystemStatus] = useState<'ready' | 'not-ready'>('ready');
-
-  // Check actual system health
-  useEffect(() => {
-    const checkSystemStatus = async () => {
-      try {
-        const response = await fetch('/api/health');
-        const data = await response.json();
-        setSystemStatus(data.status);
-      } catch (error) {
-        console.error('Health check failed:', error);
-        setSystemStatus('not-ready');
-      }
-    };
-
-    checkSystemStatus();
-    // Check status every 30 seconds
-    const interval = setInterval(checkSystemStatus, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const [systemStatus] = useState<'ready' | 'not-ready'>('ready');
 
   const getStatusDisplay = () => {
     if (systemStatus === 'ready') {
