@@ -68,13 +68,11 @@ export class PhishingService {
       let googleSafeBrowsingChecked = false;
       
       if (this.API_KEY) {
-        try {
-          googleSafeBrowsingThreat = await this.checkGoogleSafeBrowsing(urlString);
+        const result = await this.checkGoogleSafeBrowsing(urlString);
+        if (result.success) {
+          googleSafeBrowsingThreat = result.isThreat;
           googleSafeBrowsingChecked = true;
           indicators.googleSafeBrowsing = googleSafeBrowsingThreat;
-        } catch (error) {
-          // If Google API fails, continue with heuristic analysis only
-          console.error('Google Safe Browsing API error:', error);
         }
       }
 
@@ -101,11 +99,11 @@ export class PhishingService {
     }
   }
 
-  private async checkGoogleSafeBrowsing(url: string): Promise<boolean> {
+  private async checkGoogleSafeBrowsing(url: string): Promise<{ success: boolean; isThreat: boolean }> {
     // Check cache first to minimize API calls
     const cached = this.safeBrowsingCache.get(url);
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return cached.isThreat;
+      return { success: true, isThreat: cached.isThreat };
     }
 
     try {
@@ -136,7 +134,8 @@ export class PhishingService {
       });
 
       if (!response.ok) {
-        throw new Error(`Google Safe Browsing API error: ${response.status}`);
+        console.error(`Google Safe Browsing API error: ${response.status} - API may not be enabled`);
+        return { success: false, isThreat: false };
       }
 
       const data = await response.json();
@@ -151,10 +150,10 @@ export class PhishingService {
       // Clean old cache entries to prevent memory bloat
       this.cleanCache();
 
-      return isThreat;
+      return { success: true, isThreat };
     } catch (error) {
       console.error('Google Safe Browsing check failed:', error);
-      return false; // Return false on error, rely on heuristic analysis
+      return { success: false, isThreat: false };
     }
   }
 
