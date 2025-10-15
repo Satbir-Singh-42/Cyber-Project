@@ -54,3 +54,7 @@
 [x] 54. Fixed detection for figmo.com and similar lookalike domains
 [x] 55. User successfully enabled Google Safe Browsing API in Google Cloud Console
 [x] 56. System ready to use both Google API verification and heuristic analysis
+[x] 57. FIXED: Increased typosquatting risk score from 25 to 70 points (now HIGH risk)
+[x] 58. Updated all risk weights to be more aggressive against phishing attacks
+[x] 59. Typosquatting attacks now properly flagged as HIGH/CRITICAL instead of LOW risk
+[x] 60. System no longer relies on hardcoded low scores for security threats

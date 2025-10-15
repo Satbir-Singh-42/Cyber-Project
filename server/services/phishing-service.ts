@@ -402,28 +402,30 @@ export class PhishingService {
     let score = 0;
     const weights = {
       googleSafeBrowsing: 50, // High weight for Google's verification
-      ipBasedUrl: 25,
-      suspiciousSubdomains: 20,
-      shortUrl: 15,
+      ipBasedUrl: 30,
+      suspiciousSubdomains: 25,
+      shortUrl: 20,
       suspiciousKeywords: 20,
       missingHttps: 10,
-      homoglyphDetected: 25,
-      excessiveRedirects: 10,
-      suspiciousPort: 15,
-      newDomain: 25,
+      homoglyphDetected: 70, // CRITICAL: Typosquatting impersonates legitimate sites
+      excessiveRedirects: 15,
+      suspiciousPort: 20,
+      newDomain: 30,
       mediumDomain: 10,
-      establishedDomain: -20,
+      establishedDomain: -30, // Strong negative for verified legitimate domains
     };
 
-    // Google Safe Browsing has highest priority
+    // Google Safe Browsing has highest priority - if threat detected, immediately critical
     if (indicators.googleSafeBrowsing) score += weights.googleSafeBrowsing;
+
+    // Typosquatting is CRITICAL - deliberate impersonation attempt
+    if (indicators.homoglyphDetected) score += weights.homoglyphDetected;
 
     if (indicators.ipBasedUrl) score += weights.ipBasedUrl;
     if (indicators.suspiciousSubdomains) score += weights.suspiciousSubdomains;
     if (indicators.shortUrl) score += weights.shortUrl;
     if (indicators.suspiciousKeywords) score += weights.suspiciousKeywords;
     if (indicators.missingHttps) score += weights.missingHttps;
-    if (indicators.homoglyphDetected) score += weights.homoglyphDetected;
     if (indicators.excessiveRedirects) score += weights.excessiveRedirects;
     if (indicators.suspiciousPort) score += weights.suspiciousPort;
 
