@@ -287,7 +287,7 @@ export class PhishingService {
       ipBasedUrl: this.isIpBasedUrl(hostname),
       suspiciousSubdomains: this.hasSuspiciousSubdomains(hostname),
       shortUrl: this.isShortUrl(hostname),
-      suspiciousKeywords: this.containsSuspiciousKeywords(url.href),
+      suspiciousKeywords: this.containsSuspiciousKeywords(hostname),
       missingHttps: url.protocol !== "https:",
       domainAge: this.estimateDomainAge(hostname),
       homoglyphDetected: this.hasHomographAttack(hostname) || this.isTyposquatting(hostname),
@@ -321,8 +321,17 @@ export class PhishingService {
     return SHORT_URL_DOMAINS.includes(hostname);
   }
 
-  private containsSuspiciousKeywords(url: string): boolean {
-    const lower = url.toLowerCase();
+  private containsSuspiciousKeywords(hostname: string): boolean {
+    // Only check hostname, not the full URL path
+    // This prevents false positives from legitimate URLs with keywords in paths
+    const lower = hostname.toLowerCase();
+    
+    // Don't flag legitimate domains
+    if (LEGITIMATE_DOMAINS.includes(lower)) {
+      return false;
+    }
+    
+    // Check if suspicious keywords appear in the domain name itself
     return SUSPICIOUS_KEYWORDS.some((kw) => lower.includes(kw));
   }
 
@@ -335,13 +344,19 @@ export class PhishingService {
   }
 
   private hasHomographAttack(hostname: string): boolean {
+    // Check for non-ASCII Unicode characters (Cyrillic, Greek, etc.)
     const unicodePatterns = /[\u0400-\u04FF\u0370-\u03FF\uFF00-\uFFEF]/;
+    // Check for IDN (Internationalized Domain Name) encoded domains
     const idnPattern = /xn--/;
-    const mixedChars = /[0oOQ1lI5sS2zZ]/;
-    return unicodePatterns.test(hostname) || idnPattern.test(hostname) || mixedChars.test(hostname);
+    return unicodePatterns.test(hostname) || idnPattern.test(hostname);
   }
 
   private isTyposquatting(hostname: string): boolean {
+    // If it's a legitimate domain, it's not typosquatting
+    if (LEGITIMATE_DOMAINS.includes(hostname)) {
+      return false;
+    }
+
     // Check if hostname is a known typosquatting variation
     for (const [legitimate, typos] of Object.entries(TYPOSQUATTING_PATTERNS)) {
       if (typos.includes(hostname)) {
@@ -350,6 +365,7 @@ export class PhishingService {
     }
 
     // Check for Levenshtein distance (simple similarity check)
+    // Only flag if similar to legitimate domain but not exact match
     for (const legitimateDomain of LEGITIMATE_DOMAINS) {
       if (this.calculateLevenshteinDistance(hostname, legitimateDomain) <= 2 && hostname !== legitimateDomain) {
         return true;
