@@ -50,6 +50,7 @@ const LEGITIMATE_DOMAINS = [
 // Common typosquatting variations
 const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
   "google.com": ["gooogle.com", "googgle.com", "gogle.com", "googel.com", "g00gle.com"],
+  "youtube.com": ["toutube.com", "youtub.com", "yotube.com", "youtuube.com", "youtobe.com", "youtbe.com"],
   "github.com": ["githup.com", "githb.com", "guthub.com", "githib.com", "gathub.com"],
   "facebook.com": ["faceboook.com", "facebok.com", "faceb00k.com", "fecebook.com"],
   "paypal.com": ["paypai.com", "paypa1.com", "payppal.com", "paypa.com"],

@@ -38,3 +38,5 @@
 [x] 38. Implemented comprehensive error categorization (timeouts, network errors, auth errors)
 [x] 39. Added detailed logging for API failures (400, 403, 429 status codes)
 [x] 40. Ensured graceful fallback to heuristic analysis when API is unavailable
+[x] 41. Added YouTube typosquatting variations (toutube.com, youtobe.com, etc.)
+[x] 42. Expanded phishing detection database to cover more popular websites
