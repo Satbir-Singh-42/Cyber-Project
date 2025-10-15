@@ -135,16 +135,32 @@ export class PhishingService {
         }
       };
 
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        console.error(`Google Safe Browsing API error: ${response.status} - API may not be enabled`);
+        const errorText = await response.text().catch(() => 'Unknown error');
+        if (response.status === 400) {
+          console.error(`Google Safe Browsing API error: Invalid API key or request format - ${errorText}`);
+        } else if (response.status === 403) {
+          console.error(`Google Safe Browsing API error: API key not authorized or API not enabled - ${errorText}`);
+        } else if (response.status === 429) {
+          console.error(`Google Safe Browsing API error: Rate limit exceeded - ${errorText}`);
+        } else {
+          console.error(`Google Safe Browsing API error: ${response.status} - ${errorText}`);
+        }
         return { success: false, isThreat: false };
       }
 
@@ -161,8 +177,14 @@ export class PhishingService {
       this.cleanCache();
 
       return { success: true, isThreat };
-    } catch (error) {
-      console.error('Google Safe Browsing check failed:', error);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.error('Google Safe Browsing check timed out after 5 seconds');
+      } else if (error.message?.includes('fetch')) {
+        console.error('Google Safe Browsing check failed: Network error -', error.message);
+      } else {
+        console.error('Google Safe Browsing check failed:', error.message || error);
+      }
       return { success: false, isThreat: false };
     }
   }

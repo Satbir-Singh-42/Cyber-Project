@@ -32,3 +32,9 @@
 [x] 32. Implemented Levenshtein distance algorithm for domain similarity detection
 [x] 33. Added database of common typosquatting variations for major websites
 [x] 34. Updated warning messages to specifically mention typosquatting threats
+[x] 35. Verified API key is securely stored in environment variables (GOOGLE_API_KEY)
+[x] 36. Enhanced API error handling with specific error messages for different failure scenarios
+[x] 37. Added 5-second timeout protection to prevent hanging API requests
+[x] 38. Implemented comprehensive error categorization (timeouts, network errors, auth errors)
+[x] 39. Added detailed logging for API failures (400, 403, 429 status codes)
+[x] 40. Ensured graceful fallback to heuristic analysis when API is unavailable
