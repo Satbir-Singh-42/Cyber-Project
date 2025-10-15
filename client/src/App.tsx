@@ -10,6 +10,7 @@ import PhishingDetectorPage from "@/pages/phishing-detector-page";
 import PortScannerPage from "@/pages/port-scanner-page";
 import KeyloggerDetectorPage from "@/pages/keylogger-detector-page";
 import FileIntegrityPage from "@/pages/file-integrity-page";
+import DeveloperPage from "@/pages/developer-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -44,6 +45,11 @@ function Router() {
       <Route path="/file-integrity">
         <Layout>
           <FileIntegrityPage />
+        </Layout>
+      </Route>
+      <Route path="/developers">
+        <Layout>
+          <DeveloperPage />
         </Layout>
       </Route>
       <Route>

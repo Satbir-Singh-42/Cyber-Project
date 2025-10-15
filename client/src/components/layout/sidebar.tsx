@@ -10,7 +10,8 @@ import {
   Home,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Code
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -58,6 +59,12 @@ const sidebarItems: SidebarItem[] = [
     label: "File Integrity Monitor",
     path: "/file-integrity",
     description: "Track file system changes"
+  },
+  {
+    icon: Code,
+    label: "Developers",
+    path: "/developers",
+    description: "Meet the team behind this toolkit"
   }
 ];
 
