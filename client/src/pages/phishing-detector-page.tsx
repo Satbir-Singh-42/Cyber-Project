@@ -1,5 +1,5 @@
 import { PhishingDetector } from "@/components/security/phishing-detector";
-import { ShieldAlert, GlobeLock, RefreshCcw } from "lucide-react";
+import { ShieldAlert, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -32,21 +32,6 @@ export default function PhishingDetectorPage() {
         </CardContent>
       </Card>
 
-      {/* Dynamic Threat Intelligence Section */}
-      <Card className="bg-muted/50 border border-border/40">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <GlobeLock className="h-5 w-5 text-blue-500" />
-            Live Threat Intelligence (Coming Soon)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Soon you’ll be able to cross-check URLs in real time against a live threat 
-          intelligence database that aggregates global phishing indicators, 
-          DNS reputation scores, and active attack patterns.
-        </CardContent>
-      </Card>
-
       {/* Phishing Protection Tips */}
       <section className="bg-muted/50 p-6 rounded-2xl">
         <h3 className="text-lg font-semibold mb-4">Phishing Protection Tips</h3>
@@ -64,7 +49,7 @@ export default function PhishingDetectorPage() {
           <div>
             <h4 className="font-medium mb-2">Stay Safe Online:</h4>
             <ul className="space-y-1 text-muted-foreground">
-              <li>• Verify the sender’s identity before clicking links</li>
+              <li>• Verify the sender's identity before clicking links</li>
               <li>• Hover over links to preview their destination</li>
               <li>• Use a password manager to detect spoofed sites</li>
               <li>• Report suspicious URLs to your IT/security team</li>
