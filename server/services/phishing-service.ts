@@ -161,7 +161,7 @@ export class PhishingService {
         console.log(`[Phishing Service] No Google API key configured, using heuristic analysis only`);
       }
 
-      const score = this.calculateRiskScore(indicators);
+      const score = this.calculateRiskScore(indicators, url.hostname);
       const risk = this.getRiskLevel(score);
       const details = this.generateDetails(indicators);
       const recommendations = this.generateRecommendations(indicators, risk);
@@ -338,6 +338,17 @@ export class PhishingService {
     return SUSPICIOUS_KEYWORDS.some((kw) => lower.includes(kw));
   }
 
+  private countSuspiciousKeywords(hostname: string): number {
+    const lower = hostname.toLowerCase();
+    const normalizedHostname = lower.replace(/^www\./, '');
+    
+    if (LEGITIMATE_DOMAINS.includes(lower) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+      return 0;
+    }
+    
+    return SUSPICIOUS_KEYWORDS.filter((kw) => lower.includes(kw)).length;
+  }
+
   private estimateDomainAge(hostname: string): PhishingAnalysis["indicators"]["domainAge"] {
     // Normalize hostname by removing www. prefix
     const normalizedHostname = hostname.replace(/^www\./, '');
@@ -426,7 +437,7 @@ export class PhishingService {
     return suspiciousPorts.includes(portNum) || portNum > 49152;
   }
 
-  private calculateRiskScore(indicators: PhishingAnalysis["indicators"]): number {
+  private calculateRiskScore(indicators: PhishingAnalysis["indicators"], hostname: string): number {
     let score = 0;
     const weights = {
       googleSafeBrowsing: 100, // CRITICAL: Google confirmed threat - instant max score
@@ -475,9 +486,17 @@ export class PhishingService {
 
     // If multiple indicators present, add combination penalty
     if (suspiciousCount >= 3) {
-      score += 20; // High risk when multiple indicators combine
+      score += 25; // High risk when multiple indicators combine
     } else if (suspiciousCount >= 2) {
-      score += 10; // Medium-high risk for 2 indicators
+      score += 15; // Medium-high risk for 2 indicators
+    }
+
+    // Extra penalty for multiple phishing keywords in domain name
+    const keywordCount = this.countSuspiciousKeywords(hostname);
+    if (keywordCount >= 3) {
+      score += 20; // Multiple keywords = likely phishing
+    } else if (keywordCount >= 2) {
+      score += 10; // Two keywords = suspicious
     }
 
     return Math.min(100, Math.max(0, score));
