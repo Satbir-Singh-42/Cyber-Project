@@ -42,20 +42,77 @@ const SHORT_URL_DOMAINS = [
 ];
 
 const LEGITIMATE_DOMAINS = [
-  "google.com", "youtube.com", "facebook.com", "amazon.com", "microsoft.com",
-  "apple.com", "twitter.com", "instagram.com", "linkedin.com", "github.com",
-  "stackoverflow.com", "reddit.com", "wikipedia.org", "paypal.com", "ebay.com"
+  // Search & Tech Giants
+  "google.com", "youtube.com", "microsoft.com", "apple.com", "amazon.com",
+  // Social Media
+  "facebook.com", "twitter.com", "instagram.com", "linkedin.com", "reddit.com", "tiktok.com", "snapchat.com", "pinterest.com", "whatsapp.com",
+  // Developer Platforms
+  "github.com", "gitlab.com", "stackoverflow.com", "npmjs.com", "pypi.org",
+  // Financial & Shopping
+  "paypal.com", "stripe.com", "ebay.com", "walmart.com", "target.com", "bestbuy.com", "shopify.com", "etsy.com",
+  // Banking
+  "chase.com", "bankofamerica.com", "wellsfargo.com", "citi.com", "capitalone.com", "usbank.com",
+  // Cloud & Services
+  "dropbox.com", "office365.com", "outlook.com", "icloud.com", "drive.google.com", "onedrive.com",
+  // Communication & Email
+  "gmail.com", "yahoo.com", "hotmail.com", "protonmail.com", "zoho.com",
+  // Streaming & Entertainment
+  "netflix.com", "spotify.com", "hulu.com", "twitch.tv", "disney.com", "primevideo.com",
+  // News & Media
+  "cnn.com", "bbc.com", "nytimes.com", "wikipedia.org", "medium.com",
+  // E-commerce & Marketplaces
+  "aliexpress.com", "alibaba.com", "wish.com", "wayfair.com",
+  // Crypto & Finance
+  "coinbase.com", "binance.com", "kraken.com", "blockchain.com",
+  // Government & Education
+  "irs.gov", "usa.gov", "gov.uk", "mit.edu", "stanford.edu",
+  // Security & Services
+  "adobe.com", "zoom.us", "slack.com", "discord.com", "notion.so", "canva.com"
 ];
 
 // Common typosquatting variations
 const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
-  "google.com": ["gooogle.com", "googgle.com", "gogle.com", "googel.com", "g00gle.com"],
-  "youtube.com": ["toutube.com", "youtub.com", "yotube.com", "youtuube.com", "youtobe.com", "youtbe.com"],
-  "github.com": ["githup.com", "githb.com", "guthub.com", "githib.com", "gathub.com"],
-  "facebook.com": ["faceboook.com", "facebok.com", "faceb00k.com", "fecebook.com"],
-  "paypal.com": ["paypai.com", "paypa1.com", "payppal.com", "paypa.com"],
-  "amazon.com": ["amazom.com", "amaz0n.com", "amazan.com", "amazoon.com"],
-  "microsoft.com": ["micros0ft.com", "microsof.com", "mlcrosoft.com"],
+  // Search & Tech
+  "google.com": ["gooogle.com", "googgle.com", "gogle.com", "googel.com", "g00gle.com", "googlr.com", "goog1e.com"],
+  "youtube.com": ["toutube.com", "youtub.com", "yotube.com", "youtuube.com", "youtobe.com", "youtbe.com", "youtubr.com"],
+  "microsoft.com": ["micros0ft.com", "microsof.com", "mlcrosoft.com", "micosoft.com", "microsfot.com"],
+  "apple.com": ["appie.com", "appl3.com", "aple.com", "applle.com", "apppe.com"],
+  "amazon.com": ["amazom.com", "amaz0n.com", "amazan.com", "amazoon.com", "arnaz0n.com", "arnazon.com"],
+  
+  // Social Media
+  "facebook.com": ["faceboook.com", "facebok.com", "faceb00k.com", "fecebook.com", "faceboook.com", "facebk.com"],
+  "twitter.com": ["twiter.com", "twtter.com", "twitt3r.com", "twitterr.com", "twiiter.com"],
+  "instagram.com": ["instagrarn.com", "instgram.com", "instagran.com", "inst4gram.com", "instagramm.com"],
+  "linkedin.com": ["linkedln.com", "linkdin.com", "linkedim.com", "linkeldin.com", "linkedln.com"],
+  "tiktok.com": ["tiktoc.com", "tikttok.com", "tiktokk.com", "tlktok.com"],
+  
+  // Developer
+  "github.com": ["githup.com", "githb.com", "guthub.com", "githib.com", "gathub.com", "githhub.com"],
+  "stackoverflow.com": ["stackoverfiow.com", "stackoverflow.co", "stackoverfow.com", "stackoverflw.com"],
+  
+  // Financial
+  "paypal.com": ["paypai.com", "paypa1.com", "payppal.com", "paypa.com", "paypai.com", "paypaI.com"],
+  "stripe.com": ["strpe.com", "strlpe.com", "stripee.com", "str1pe.com"],
+  
+  // Banking
+  "chase.com": ["chas3.com", "chasse.com", "chace.com", "cbase.com"],
+  "bankofamerica.com": ["bankofamercia.com", "bankofamerlca.com", "bankofamerica.co"],
+  
+  // Cloud
+  "dropbox.com": ["dropb0x.com", "drophox.com", "dropbx.com", "dropp-box.com"],
+  "icloud.com": ["icl0ud.com", "iclould.com", "iclaud.com", "icIoud.com"],
+  
+  // Email
+  "gmail.com": ["gmai1.com", "gmial.com", "grnail.com", "gmai.com", "gmaill.com"],
+  "outlook.com": ["out1ook.com", "outlok.com", "outlookk.com", "0utlook.com"],
+  
+  // Streaming
+  "netflix.com": ["netfl1x.com", "netfllx.com", "netfiix.com", "netflex.com", "netflx.com"],
+  "spotify.com": ["spotlfy.com", "spot1fy.com", "spotfy.com", "spotifyy.com"],
+  
+  // Crypto
+  "coinbase.com": ["c0inbase.com", "coinbasse.com", "coinbas3.com", "colnbase.com"],
+  "binance.com": ["blnance.com", "binanse.com", "binannce.com", "binnance.com"]
 };
 
 // Cache for Google Safe Browsing results (1 hour TTL)
