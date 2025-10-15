@@ -42,7 +42,12 @@ export function PhishingDetector() {
 
   const handleAnalyze = () => {
     if (url.trim()) {
-      analyzeUrlMutation.mutate(url.trim());
+      let urlToAnalyze = url.trim();
+      // Add protocol if missing
+      if (!urlToAnalyze.startsWith('http://') && !urlToAnalyze.startsWith('https://')) {
+        urlToAnalyze = 'https://' + urlToAnalyze;
+      }
+      analyzeUrlMutation.mutate(urlToAnalyze);
     }
   };
 
