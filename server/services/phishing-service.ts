@@ -429,22 +429,24 @@ export class PhishingService {
   private calculateRiskScore(indicators: PhishingAnalysis["indicators"]): number {
     let score = 0;
     const weights = {
-      googleSafeBrowsing: 50, // High weight for Google's verification
-      ipBasedUrl: 30,
+      googleSafeBrowsing: 100, // CRITICAL: Google confirmed threat - instant max score
+      ipBasedUrl: 35,
       suspiciousSubdomains: 25,
-      shortUrl: 20,
-      suspiciousKeywords: 20,
-      missingHttps: 10,
-      homoglyphDetected: 70, // CRITICAL: Typosquatting impersonates legitimate sites
-      excessiveRedirects: 15,
-      suspiciousPort: 20,
-      newDomain: 30,
-      mediumDomain: 10,
-      establishedDomain: -30, // Strong negative for verified legitimate domains
+      shortUrl: 15,
+      suspiciousKeywords: 25,
+      missingHttps: 15,
+      homoglyphDetected: 80, // CRITICAL: Typosquatting impersonates legitimate sites
+      excessiveRedirects: 20,
+      suspiciousPort: 25,
+      newDomain: 20,
+      mediumDomain: 5,
+      establishedDomain: -50, // Strong negative for verified legitimate domains
     };
 
     // Google Safe Browsing has highest priority - if threat detected, immediately critical
-    if (indicators.googleSafeBrowsing) score += weights.googleSafeBrowsing;
+    if (indicators.googleSafeBrowsing) {
+      return 100; // Instant critical score for confirmed threats
+    }
 
     // Typosquatting is CRITICAL - deliberate impersonation attempt
     if (indicators.homoglyphDetected) score += weights.homoglyphDetected;
@@ -460,6 +462,23 @@ export class PhishingService {
     if (indicators.domainAge === "new") score += weights.newDomain;
     if (indicators.domainAge === "medium") score += weights.mediumDomain;
     if (indicators.domainAge === "established") score += weights.establishedDomain;
+
+    // Combination penalties - multiple suspicious indicators increase risk exponentially
+    let suspiciousCount = 0;
+    if (indicators.ipBasedUrl) suspiciousCount++;
+    if (indicators.suspiciousSubdomains) suspiciousCount++;
+    if (indicators.shortUrl) suspiciousCount++;
+    if (indicators.suspiciousKeywords) suspiciousCount++;
+    if (indicators.missingHttps) suspiciousCount++;
+    if (indicators.excessiveRedirects) suspiciousCount++;
+    if (indicators.suspiciousPort) suspiciousCount++;
+
+    // If multiple indicators present, add combination penalty
+    if (suspiciousCount >= 3) {
+      score += 20; // High risk when multiple indicators combine
+    } else if (suspiciousCount >= 2) {
+      score += 10; // Medium-high risk for 2 indicators
+    }
 
     return Math.min(100, Math.max(0, score));
   }
