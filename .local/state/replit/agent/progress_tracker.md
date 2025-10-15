@@ -28,3 +28,7 @@
 [x] 28. Backend is 100% working with proper error handling and security practices
 [x] 29. Reinstalled all dependencies to ensure tsx and other dev tools are available
 [x] 30. Workflow successfully restarted and application running on port 5000
+[x] 31. Enhanced phishing detector to detect typosquatting attacks (e.g., gathub.com vs github.com)
+[x] 32. Implemented Levenshtein distance algorithm for domain similarity detection
+[x] 33. Added database of common typosquatting variations for major websites
+[x] 34. Updated warning messages to specifically mention typosquatting threats

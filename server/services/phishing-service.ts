@@ -47,6 +47,16 @@ const LEGITIMATE_DOMAINS = [
   "stackoverflow.com", "reddit.com", "wikipedia.org", "paypal.com", "ebay.com"
 ];
 
+// Common typosquatting variations
+const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
+  "google.com": ["gooogle.com", "googgle.com", "gogle.com", "googel.com", "g00gle.com"],
+  "github.com": ["githup.com", "githb.com", "guthub.com", "githib.com", "gathub.com"],
+  "facebook.com": ["faceboook.com", "facebok.com", "faceb00k.com", "fecebook.com"],
+  "paypal.com": ["paypai.com", "paypa1.com", "payppal.com", "paypa.com"],
+  "amazon.com": ["amazom.com", "amaz0n.com", "amazan.com", "amazoon.com"],
+  "microsoft.com": ["micros0ft.com", "microsof.com", "mlcrosoft.com"],
+};
+
 // Cache for Google Safe Browsing results (1 hour TTL)
 interface CacheEntry {
   isThreat: boolean;
@@ -176,7 +186,7 @@ export class PhishingService {
       suspiciousKeywords: this.containsSuspiciousKeywords(url.href),
       missingHttps: url.protocol !== "https:",
       domainAge: this.estimateDomainAge(hostname),
-      homoglyphDetected: this.hasHomographAttack(hostname),
+      homoglyphDetected: this.hasHomographAttack(hostname) || this.isTyposquatting(hostname),
       excessiveRedirects: this.hasExcessiveRedirects(url.href),
       suspiciousPort: this.hasSuspiciousPort(url.port),
       googleSafeBrowsing: false as boolean,
@@ -225,6 +235,52 @@ export class PhishingService {
     const idnPattern = /xn--/;
     const mixedChars = /[0oOQ1lI5sS2zZ]/;
     return unicodePatterns.test(hostname) || idnPattern.test(hostname) || mixedChars.test(hostname);
+  }
+
+  private isTyposquatting(hostname: string): boolean {
+    // Check if hostname is a known typosquatting variation
+    for (const [legitimate, typos] of Object.entries(TYPOSQUATTING_PATTERNS)) {
+      if (typos.includes(hostname)) {
+        return true;
+      }
+    }
+
+    // Check for Levenshtein distance (simple similarity check)
+    for (const legitimateDomain of LEGITIMATE_DOMAINS) {
+      if (this.calculateLevenshteinDistance(hostname, legitimateDomain) <= 2 && hostname !== legitimateDomain) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private calculateLevenshteinDistance(str1: string, str2: string): number {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+
+    return matrix[str2.length][str1.length];
   }
 
   private hasExcessiveRedirects(url: string): boolean {
@@ -289,7 +345,7 @@ export class PhishingService {
       shortUrl: "URL shortening service detected",
       suspiciousKeywords: "Contains phishing-related keywords",
       missingHttps: "Connection is not encrypted (no HTTPS)",
-      homoglyphDetected: "Potential homoglyph (lookalike character) attack",
+      homoglyphDetected: "⚠️ Typosquatting or lookalike domain detected - may impersonate a legitimate site",
       excessiveRedirects: "Multiple redirects detected in URL",
       suspiciousPort: "Non-standard or high port usage detected",
     };
