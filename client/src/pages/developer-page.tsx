@@ -5,22 +5,25 @@ import { Button } from "@/components/ui/button";
 export default function DeveloperPage() {
   const developers = [
     {
-      name: "Developer 1",
+      name: "Satbir Singh",
       education: "B.Tech student in Information Technology of 2022-26 batch",
-      linkedin: "#",
-      email: "developer1@example.com"
+      linkedin: "www.linkedin.com/in/satbir-singh-486587254",
+      email: "satbirsinghubhi@gmail.com",
+      image: "/images/Satbir Singh.png"
     },
     {
       name: "Developer 2",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer2@example.com"
+      email: "developer2@example.com",
+      image: "/images/Satbir Singh.png"
     },
     {
       name: "Developer 3",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
       email: "developer3@example.com"
+       image: "/images/Satbir Singh.png"
     }
   ];
 
@@ -37,17 +40,23 @@ export default function DeveloperPage() {
         </p>
       </header>
 
-      {/* Developer Cards Grid */}
+          {/* Developer Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {developers.map((dev, index) => (
-          <Card key={index} className="border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+          <Card
+            key={index}
+            className="border border-border/50 shadow-sm hover:shadow-md transition-shadow"
+          >
             <CardHeader className="pb-4">
-              {/* Image Placeholder */}
+              {/* Profile Image */}
               <div className="flex justify-center mb-4">
-                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center">
-                  <User className="h-16 w-16 text-muted-foreground" />
-                </div>
+                <img
+                  src={dev.image}
+                  alt={dev.name}
+                  className="w-32 h-32 rounded-full object-cover border border-border shadow-sm"
+                />
               </div>
+
               {/* Name */}
               <div className="text-center">
                 <h3 className="text-xl font-semibold">{dev.name}</h3>
