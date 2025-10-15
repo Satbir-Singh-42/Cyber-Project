@@ -321,39 +321,68 @@ export class PhishingService {
     return SHORT_URL_DOMAINS.includes(hostname);
   }
 
+  private getRegistrableDomain(hostname: string): string {
+    // Extract the registrable domain (main domain + TLD)
+    // Handles common multi-level TLDs like .co.uk, .com.au
+    const parts = hostname.toLowerCase().split('.');
+    
+    // Handle multi-level TLDs
+    const multiLevelTLDs = ['co.uk', 'com.au', 'co.jp', 'co.nz', 'co.za', 'com.br', 'com.cn'];
+    
+    if (parts.length >= 3) {
+      const lastTwo = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+      if (multiLevelTLDs.includes(lastTwo)) {
+        // Multi-level TLD: return domain.co.uk format
+        return parts.slice(-3).join('.');
+      }
+    }
+    
+    // Standard TLD: return domain.com format
+    if (parts.length >= 2) {
+      return parts.slice(-2).join('.');
+    }
+    
+    return hostname;
+  }
+
+  private isLegitimateOrSubdomain(hostname: string): boolean {
+    const lower = hostname.toLowerCase();
+    const registrable = this.getRegistrableDomain(lower);
+    
+    // Check if exact match or subdomain of legitimate domain
+    return LEGITIMATE_DOMAINS.includes(lower) || 
+           LEGITIMATE_DOMAINS.includes(registrable) ||
+           LEGITIMATE_DOMAINS.some(legitDomain => lower.endsWith('.' + legitDomain));
+  }
+
   private containsSuspiciousKeywords(hostname: string): boolean {
     // Only check hostname, not the full URL path
     // This prevents false positives from legitimate URLs with keywords in paths
-    const lower = hostname.toLowerCase();
     
-    // Normalize hostname by removing www. prefix
-    const normalizedHostname = lower.replace(/^www\./, '');
-    
-    // Don't flag legitimate domains (check both with and without www.)
-    if (LEGITIMATE_DOMAINS.includes(lower) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+    // Don't flag legitimate domains or their subdomains
+    if (this.isLegitimateOrSubdomain(hostname)) {
       return false;
     }
+    
+    const lower = hostname.toLowerCase();
     
     // Check if suspicious keywords appear in the domain name itself
     return SUSPICIOUS_KEYWORDS.some((kw) => lower.includes(kw));
   }
 
   private countSuspiciousKeywords(hostname: string): number {
-    const lower = hostname.toLowerCase();
-    const normalizedHostname = lower.replace(/^www\./, '');
-    
-    if (LEGITIMATE_DOMAINS.includes(lower) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+    // Don't flag legitimate domains or their subdomains
+    if (this.isLegitimateOrSubdomain(hostname)) {
       return 0;
     }
     
+    const lower = hostname.toLowerCase();
     return SUSPICIOUS_KEYWORDS.filter((kw) => lower.includes(kw)).length;
   }
 
   private estimateDomainAge(hostname: string): PhishingAnalysis["indicators"]["domainAge"] {
-    // Normalize hostname by removing www. prefix
-    const normalizedHostname = hostname.replace(/^www\./, '');
-    
-    if (LEGITIMATE_DOMAINS.includes(hostname) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+    // Check if legitimate domain or subdomain
+    if (this.isLegitimateOrSubdomain(hostname)) {
       return "established";
     }
 
@@ -371,17 +400,17 @@ export class PhishingService {
   }
 
   private isTyposquatting(hostname: string): boolean {
-    // Normalize hostname by removing www. prefix
-    const normalizedHostname = hostname.replace(/^www\./, '');
+    const lower = hostname.toLowerCase();
+    const registrable = this.getRegistrableDomain(lower);
     
-    // If it's a legitimate domain, it's not typosquatting
-    if (LEGITIMATE_DOMAINS.includes(hostname) || LEGITIMATE_DOMAINS.includes(normalizedHostname)) {
+    // If it's a legitimate domain or subdomain, it's not typosquatting
+    if (this.isLegitimateOrSubdomain(lower)) {
       return false;
     }
 
-    // Check if hostname is a known typosquatting variation
+    // Check if hostname or registrable domain is a known typosquatting variation
     for (const [legitimate, typos] of Object.entries(TYPOSQUATTING_PATTERNS)) {
-      if (typos.includes(hostname) || typos.includes(normalizedHostname)) {
+      if (typos.includes(lower) || typos.includes(registrable)) {
         return true;
       }
     }
@@ -389,8 +418,8 @@ export class PhishingService {
     // Check for Levenshtein distance (simple similarity check)
     // Only flag if similar to legitimate domain but not exact match
     for (const legitimateDomain of LEGITIMATE_DOMAINS) {
-      const distance = this.calculateLevenshteinDistance(normalizedHostname, legitimateDomain);
-      if (distance <= 2 && normalizedHostname !== legitimateDomain) {
+      const distance = this.calculateLevenshteinDistance(registrable, legitimateDomain);
+      if (distance <= 2 && registrable !== legitimateDomain) {
         return true;
       }
     }
