@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Code, Linkedin, Mail } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Code, Linkedin, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function DeveloperPage() {
@@ -8,22 +8,19 @@ export default function DeveloperPage() {
       name: "Developer 1",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer1@example.com",
-      skills: ["React", "TypeScript", "Node.js", "Security Analysis"]
+      email: "developer1@example.com"
     },
     {
       name: "Developer 2",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer2@example.com",
-      skills: ["Full Stack Development", "Cybersecurity", "Cloud Computing"]
+      email: "developer2@example.com"
     },
     {
       name: "Developer 3",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer3@example.com",
-      skills: ["Frontend Development", "UI/UX", "Database Management"]
+      email: "developer3@example.com"
     }
   ];
 
@@ -44,32 +41,23 @@ export default function DeveloperPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {developers.map((dev, index) => (
           <Card key={index} className="border border-border/50 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="text-xl">{dev.name}</span>
-                <Code className="h-6 w-6 text-primary" />
-              </CardTitle>
+            <CardHeader className="pb-4">
+              {/* Image Placeholder */}
+              <div className="flex justify-center mb-4">
+                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center">
+                  <User className="h-16 w-16 text-muted-foreground" />
+                </div>
+              </div>
+              {/* Name */}
+              <div className="text-center">
+                <h3 className="text-xl font-semibold">{dev.name}</h3>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Education */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Education</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-1">Education</p>
                 <p className="text-sm font-medium">{dev.education}</p>
-              </div>
-
-              {/* Skills */}
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Skills</p>
-                <div className="flex flex-wrap gap-2">
-                  {dev.skills.map((skill, idx) => (
-                    <span 
-                      key={idx}
-                      className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-md"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               {/* Contact Links */}
@@ -105,7 +93,7 @@ export default function DeveloperPage() {
       {/* Team Description */}
       <Card className="bg-muted/50">
         <CardHeader>
-          <CardTitle>About the Team</CardTitle>
+          <h2 className="text-lg font-semibold">About the Team</h2>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           <p>
