@@ -13,6 +13,7 @@ export interface PhishingAnalysis {
     homoglyphDetected: boolean;
     excessiveRedirects: boolean;
     suspiciousPort: boolean;
+    googleSafeBrowsing?: boolean;
   };
   details: string[];
   recommendations: string[];
@@ -20,6 +21,7 @@ export interface PhishingAnalysis {
     hostname: string;
     tld: string;
     analyzedAt: string;
+    googleSafeBrowsingChecked?: boolean;
   };
 }
 
@@ -45,11 +47,37 @@ const LEGITIMATE_DOMAINS = [
   "stackoverflow.com", "reddit.com", "wikipedia.org", "paypal.com", "ebay.com"
 ];
 
+// Cache for Google Safe Browsing results (1 hour TTL)
+interface CacheEntry {
+  isThreat: boolean;
+  timestamp: number;
+}
+
 export class PhishingService {
-  analyzeUrl(urlString: string): PhishingAnalysis {
+  private safeBrowsingCache: Map<string, CacheEntry> = new Map();
+  private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
+  private readonly API_KEY = process.env.GOOGLE_API_KEY;
+
+  async analyzeUrl(urlString: string): Promise<PhishingAnalysis> {
     try {
       const url = new URL(urlString);
       const indicators = this.checkIndicators(url);
+      
+      // Check Google Safe Browsing API if API key is available
+      let googleSafeBrowsingThreat = false;
+      let googleSafeBrowsingChecked = false;
+      
+      if (this.API_KEY) {
+        try {
+          googleSafeBrowsingThreat = await this.checkGoogleSafeBrowsing(urlString);
+          googleSafeBrowsingChecked = true;
+          indicators.googleSafeBrowsing = googleSafeBrowsingThreat;
+        } catch (error) {
+          // If Google API fails, continue with heuristic analysis only
+          console.error('Google Safe Browsing API error:', error);
+        }
+      }
+
       const score = this.calculateRiskScore(indicators);
       const risk = this.getRiskLevel(score);
       const details = this.generateDetails(indicators);
@@ -65,10 +93,78 @@ export class PhishingService {
           hostname: url.hostname,
           tld: url.hostname.split(".").pop() || "unknown",
           analyzedAt: new Date().toISOString(),
+          googleSafeBrowsingChecked,
         },
       };
     } catch {
       return this.invalidUrlResponse();
+    }
+  }
+
+  private async checkGoogleSafeBrowsing(url: string): Promise<boolean> {
+    // Check cache first to minimize API calls
+    const cached = this.safeBrowsingCache.get(url);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.isThreat;
+    }
+
+    try {
+      // Using Google Safe Browsing API v4
+      const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${this.API_KEY}`;
+      
+      const requestBody = {
+        client: {
+          clientId: "cybersec-toolkit",
+          clientVersion: "1.0.0"
+        },
+        threatInfo: {
+          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+          platformTypes: ["ANY_PLATFORM"],
+          threatEntryTypes: ["URL"],
+          threatEntries: [
+            { url: url }
+          ]
+        }
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Google Safe Browsing API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const isThreat = data.matches && data.matches.length > 0;
+      
+      // Cache the result
+      this.safeBrowsingCache.set(url, {
+        isThreat,
+        timestamp: Date.now()
+      });
+
+      // Clean old cache entries to prevent memory bloat
+      this.cleanCache();
+
+      return isThreat;
+    } catch (error) {
+      console.error('Google Safe Browsing check failed:', error);
+      return false; // Return false on error, rely on heuristic analysis
+    }
+  }
+
+  private cleanCache(): void {
+    const now = Date.now();
+    const entries = Array.from(this.safeBrowsingCache.entries());
+    for (const [key, value] of entries) {
+      if (now - value.timestamp > this.CACHE_TTL) {
+        this.safeBrowsingCache.delete(key);
+      }
     }
   }
 
@@ -84,6 +180,7 @@ export class PhishingService {
       homoglyphDetected: this.hasHomographAttack(hostname),
       excessiveRedirects: this.hasExcessiveRedirects(url.href),
       suspiciousPort: this.hasSuspiciousPort(url.port),
+      googleSafeBrowsing: false as boolean,
     };
   }
 
@@ -145,6 +242,7 @@ export class PhishingService {
   private calculateRiskScore(indicators: PhishingAnalysis["indicators"]): number {
     let score = 0;
     const weights = {
+      googleSafeBrowsing: 50, // High weight for Google's verification
       ipBasedUrl: 25,
       suspiciousSubdomains: 20,
       shortUrl: 15,
@@ -157,6 +255,9 @@ export class PhishingService {
       mediumDomain: 10,
       establishedDomain: -20,
     };
+
+    // Google Safe Browsing has highest priority
+    if (indicators.googleSafeBrowsing) score += weights.googleSafeBrowsing;
 
     if (indicators.ipBasedUrl) score += weights.ipBasedUrl;
     if (indicators.suspiciousSubdomains) score += weights.suspiciousSubdomains;
@@ -183,6 +284,7 @@ export class PhishingService {
 
   private generateDetails(indicators: PhishingAnalysis["indicators"]): string[] {
     const map: Record<string, string> = {
+      googleSafeBrowsing: "⚠️ FLAGGED BY GOOGLE SAFE BROWSING as malicious or phishing site",
       ipBasedUrl: "URL uses IP address instead of a domain name",
       suspiciousSubdomains: "Suspicious subdomain pattern detected",
       shortUrl: "URL shortening service detected",
@@ -211,7 +313,15 @@ export class PhishingService {
   ): string[] {
     const recs: string[] = [];
 
-    if (["critical", "high"].includes(risk)) {
+    if (indicators.googleSafeBrowsing) {
+      recs.push(
+        "⛔ DO NOT visit this URL - confirmed malicious by Google",
+        "Do not enter any personal or financial information",
+        "Report this URL to your IT security team immediately"
+      );
+    }
+
+    if (["critical", "high"].includes(risk) && !indicators.googleSafeBrowsing) {
       recs.push(
         "Avoid entering personal or financial information.",
         "Do not click or forward this link.",

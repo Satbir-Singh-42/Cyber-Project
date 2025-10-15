@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   ], async (req, res) => {
     try {
       const { url } = phishingAnalysisRequestSchema.parse(req.body);
-      const analysis = phishingService.analyzeUrl(url);
+      const analysis = await phishingService.analyzeUrl(url);
       res.json(analysis);
     } catch (error: any) {
       res.status(400).json({ message: 'Invalid URL input' });
