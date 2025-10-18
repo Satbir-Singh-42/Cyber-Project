@@ -696,18 +696,6 @@ Node.js (18+)
     └── Zod 3.24.2                 # Schema validation
 ```
 
-### Development Tools
-
-```
-Build & Development
-├── ESBuild 0.25.0                 # Fast JavaScript bundler
-├── TSX 4.19.1                     # TypeScript execution
-├── Vite Plugins
-│   ├── @vitejs/plugin-react       # React support
-│   ├── @replit/vite-plugin-cartographer
-│   └── @replit/vite-plugin-runtime-error-modal
-└── PostCSS 8.4.47                 # CSS processing
-```
 
 ### Security Libraries
 
