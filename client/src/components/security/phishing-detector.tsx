@@ -19,7 +19,17 @@ interface PhishingAnalysis {
     missingHttps: boolean;
     domainAge: 'new' | 'medium' | 'established' | 'unknown';
     homoglyphDetected: boolean;
-    googleSafeBrowsing?: boolean;
+    excessiveRedirects: boolean;
+    suspiciousPort: boolean;
+    suspiciousTLD: boolean;
+    excessiveLength: boolean;
+    containsAtSymbol: boolean;
+    suspiciousSpecialChars: boolean;
+    randomStringPattern: boolean;
+    misleadingPath: boolean;
+    brandImpersonation: boolean;
+    hexEncoding: boolean;
+    dataUri: boolean;
   };
   details: string[];
   recommendations: string[];
@@ -27,7 +37,8 @@ interface PhishingAnalysis {
     hostname: string;
     tld: string;
     analyzedAt: string;
-    googleSafeBrowsingChecked?: boolean;
+    urlLength: number;
+    subdomainCount: number;
   };
 }
 
@@ -121,16 +132,6 @@ export function PhishingDetector() {
 
           {analysis && (
             <>
-              {/* Google Safe Browsing Status */}
-              {analysis.metadata.googleSafeBrowsingChecked && (
-                <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg mb-3">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <Check className="h-4 w-4 text-blue-500" />
-                    <span className="text-blue-500 font-medium">✓ Verified by Google Safe Browsing API</span>
-                  </div>
-                </div>
-              )}
-
               {/* Analysis Results */}
               <div className="bg-secondary p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-3">
@@ -147,15 +148,28 @@ export function PhishingDetector() {
                     <span className="font-mono" data-testid="text-risk-score">{analysis.score}/100</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>IP-based URL</span>
-                    {analysis.indicators.ipBasedUrl ? (
-                      <X className="h-4 w-4 text-destructive" />
-                    ) : (
-                      <Check className="h-4 w-4 text-accent" />
-                    )}
+                    <span>Hostname</span>
+                    <span className="font-mono text-xs truncate max-w-[200px]">{analysis.metadata.hostname}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>SSL Certificate</span>
+                    <span>URL Length</span>
+                    <span className="font-mono">{analysis.metadata.urlLength} chars</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Domain Age</span>
+                    <span className={analysis.indicators.domainAge === 'established' ? 'text-accent' : 'text-muted-foreground'}>
+                      {analysis.indicators.domainAge}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Security Indicators Grid */}
+              <div className="bg-secondary p-3 sm:p-4 rounded-lg">
+                <h4 className="font-medium mb-3">Security Indicators</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>SSL/HTTPS</span>
                     {!analysis.indicators.missingHttps ? (
                       <Check className="h-4 w-4 text-accent" />
                     ) : (
@@ -163,10 +177,36 @@ export function PhishingDetector() {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Domain Age</span>
-                    <span className={analysis.indicators.domainAge === 'established' ? 'text-accent' : 'text-muted-foreground'}>
-                      {analysis.indicators.domainAge}
-                    </span>
+                    <span>IP Address</span>
+                    {!analysis.indicators.ipBasedUrl ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Brand Impersonation</span>
+                    {!analysis.indicators.brandImpersonation ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Typosquatting</span>
+                    {!analysis.indicators.homoglyphDetected ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Suspicious TLD</span>
+                    {!analysis.indicators.suspiciousTLD ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Suspicious Keywords</span>
@@ -177,7 +217,7 @@ export function PhishingDetector() {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Short URL</span>
+                    <span>Short URL Service</span>
                     {!analysis.indicators.shortUrl ? (
                       <Check className="h-4 w-4 text-accent" />
                     ) : (
@@ -185,23 +225,45 @@ export function PhishingDetector() {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Typosquatting/Lookalike</span>
-                    {!analysis.indicators.homoglyphDetected ? (
+                    <span>@ Symbol</span>
+                    {!analysis.indicators.containsAtSymbol ? (
                       <Check className="h-4 w-4 text-accent" />
                     ) : (
                       <X className="h-4 w-4 text-destructive" />
                     )}
                   </div>
-                  {analysis.metadata.googleSafeBrowsingChecked && (
-                    <div className="flex items-center justify-between">
-                      <span>Google Safe Browsing</span>
-                      {!analysis.indicators.googleSafeBrowsing ? (
-                        <Check className="h-4 w-4 text-accent" />
-                      ) : (
-                        <X className="h-4 w-4 text-destructive" />
-                      )}
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span>Special Characters</span>
+                    {!analysis.indicators.suspiciousSpecialChars ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Random Pattern</span>
+                    {!analysis.indicators.randomStringPattern ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Misleading Path</span>
+                    {!analysis.indicators.misleadingPath ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Data URI</span>
+                    {!analysis.indicators.dataUri ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
                 </div>
               </div>
 
