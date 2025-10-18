@@ -28,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 ### Security Services
 The application implements five core security analysis services:
 - **Password Service**: Analyzes password strength, entropy, and crack time estimates
-- **Phishing Service**: Detects suspicious URLs and analyzes phishing indicators
+- **Phishing Service**: Enhanced heuristic-based phishing detection with 17 comprehensive indicators including brand impersonation, typosquatting, suspicious TLDs, malicious patterns, and URL structure analysis. Operates completely offline without external API dependencies for full privacy
 - **Port Service**: Performs network port scanning with service detection
 - **Keylogger Service**: Scans running processes for suspicious keylogger behavior
 - **File Integrity Service**: Monitors file systems for unauthorized changes
