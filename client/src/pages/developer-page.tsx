@@ -15,14 +15,14 @@ export default function DeveloperPage() {
       image: satbirImage,
     },
     {
-      name: "Manvi",
+      name: "Manvi Sharma",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
       email: "manvi@example.com",
       image: manviImage,
     },
     {
-      name: "Brahamjot",
+      name: "Brahamjot Singh",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
       email: "brahamjot@example.com",
