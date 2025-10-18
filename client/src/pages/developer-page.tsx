@@ -72,7 +72,6 @@ export default function DeveloperPage() {
             <CardContent className="space-y-4">
               {/* Education */}
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-1">Education</p>
                 <p className="text-sm font-medium">{dev.education}</p>
               </div>
 
