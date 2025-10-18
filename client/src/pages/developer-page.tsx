@@ -1,29 +1,32 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Code, Linkedin, Mail, User } from "lucide-react";
+import { Code, Linkedin, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import satbirImage from "@/images/Satbir Singh.png";
+import manviImage from "@/images/Manvi.png";
+import brahamjotImage from "@/images/bRAHAMJOT.jpg";
 
 export default function DeveloperPage() {
   const developers = [
     {
       name: "Satbir Singh",
       education: "B.Tech student in Information Technology of 2022-26 batch",
-      linkedin: "www.linkedin.com/in/satbir-singh-486587254",
+      linkedin: "https://www.linkedin.com/in/satbir-singh-486587254",
       email: "satbirsinghubhi@gmail.com",
-      image: "client\\src\\images\\Satbir Singh.png",
+      image: satbirImage,
     },
     {
-      name: "Developer 2",
+      name: "Manvi",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "developer2@example.com",
-      image: "clientsrc\\images\\Satbir Singh.png",
+      email: "manvi@example.com",
+      image: manviImage,
     },
     {
-      name: "Developer 3",
+      name: "Brahamjot",
       education: "B.Tech student in Information Technology of 2022-26 batch",
       linkedin: "#",
-      email: "satbir@example.com",
-      image: "client/src/images/Satbir Singh.png",
+      email: "brahamjot@example.com",
+      image: brahamjotImage,
     },
   ];
 
@@ -52,13 +55,14 @@ export default function DeveloperPage() {
             {" "}
             <CardHeader className="pb-4">
               {" "}
-              {/* Image Placeholder */}{" "}
+              {/* Developer Image */}{" "}
               <div className="flex justify-center mb-4">
                 {" "}
-                <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center">
-                  {" "}
-                  <User className="h-16 w-16 text-muted-foreground" />{" "}
-                </div>{" "}
+                <img
+                  src={dev.image}
+                  alt={dev.name}
+                  className="w-32 h-32 rounded-full object-cover border-2 border-border shadow-md"
+                />{" "}
               </div>
               {/* Name */}
               <div className="text-center">
