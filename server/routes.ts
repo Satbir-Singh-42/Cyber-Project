@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { body, validationResult } from "express-validator";
 import { PasswordService } from "./services/password-service";
@@ -14,7 +14,7 @@ import {
 } from "@shared/schema";
 
 // Validation middleware
-const handleValidationErrors = (req: any, res: any, next: any) => {
+const handleValidationErrors = (req: Request, res: Response, next: any) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ 
@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .trim()
       .escape(),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { password } = passwordAnalysisRequestSchema.parse(req.body);
       const analysis = passwordService.analyzePassword(password);
@@ -60,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .withMessage('URL must be less than 2048 characters')
       .trim(),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { url } = phishingAnalysisRequestSchema.parse(req.body);
       const analysis = await phishingService.analyzeUrl(url);
@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .withMessage('Port range must be less than 100 characters')
       .trim(),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { target, portRange } = portScanRequestSchema.parse(req.body);
       const result = await portService.scanPorts(target, portRange);
@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .withMessage('Target must be between 1 and 253 characters')
       .trim(),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { target } = req.body;
       const result = await portService.quickScan(target);
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Keylogger Detection
-  app.post("/api/security/keylogger-scan", async (req, res) => {
+  app.post("/api/security/keylogger-scan", async (req: Request, res: Response) => {
     try {
       const result = await keyloggerService.detectKeyloggers();
       res.json(result);
@@ -131,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isInt({ min: 1, max: 999999 })
       .withMessage('Process ID must be a valid integer between 1 and 999999'),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { pid } = req.body;
       const success = await keyloggerService.terminateProcess(parseInt(pid));
@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isBoolean()
       .withMessage('Recursive must be a boolean value'),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
       await fileIntegrityService.initializeBaseline(directory, recursive);
@@ -181,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isBoolean()
       .withMessage('Recursive must be a boolean value'),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
       const result = await fileIntegrityService.checkIntegrity(directory, recursive);
@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .isBoolean()
       .withMessage('Recursive must be a boolean value'),
     handleValidationErrors
-  ], async (req, res) => {
+  ], async (req: Request, res: Response) => {
     try {
       const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
       await fileIntegrityService.updateBaseline(directory, recursive);
