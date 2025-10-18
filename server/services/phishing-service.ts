@@ -13,7 +13,15 @@ export interface PhishingAnalysis {
     homoglyphDetected: boolean;
     excessiveRedirects: boolean;
     suspiciousPort: boolean;
-    googleSafeBrowsing?: boolean;
+    suspiciousTLD: boolean;
+    excessiveLength: boolean;
+    containsAtSymbol: boolean;
+    suspiciousSpecialChars: boolean;
+    randomStringPattern: boolean;
+    misleadingPath: boolean;
+    brandImpersonation: boolean;
+    hexEncoding: boolean;
+    dataUri: boolean;
   };
   details: string[];
   recommendations: string[];
@@ -21,7 +29,8 @@ export interface PhishingAnalysis {
     hostname: string;
     tld: string;
     analyzedAt: string;
-    googleSafeBrowsingChecked?: boolean;
+    urlLength: number;
+    subdomainCount: number;
   };
 }
 
@@ -39,6 +48,19 @@ const SUSPICIOUS_KEYWORDS = [
 const SHORT_URL_DOMAINS = [
   "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd",
   "buff.ly", "s.id", "v.gd", "x.co", "short.link", "rebrand.ly", "cut.ly"
+];
+
+const SUSPICIOUS_TLDS = [
+  "tk", "ml", "ga", "cf", "gq", "pw", "cc", "top", "work", "club", 
+  "live", "online", "site", "website", "space", "tech", "store", "fun",
+  "xyz", "icu", "buzz", "link", "click", "download", "racing", "stream"
+];
+
+const BRAND_KEYWORDS = [
+  "paypal", "amazon", "netflix", "microsoft", "google", "apple", "facebook",
+  "instagram", "twitter", "linkedin", "github", "dropbox", "icloud", 
+  "gmail", "outlook", "chase", "bankofamerica", "wellsfargo", "coinbase",
+  "binance", "stripe", "ebay", "walmart", "target"
 ];
 
 const LEGITIMATE_DOMAINS = [
@@ -126,42 +148,12 @@ const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
   "canva.com": ["canv.com", "canva.co", "canvva.com", "cana.com"]
 };
 
-// Cache for Google Safe Browsing results (1 hour TTL)
-interface CacheEntry {
-  isThreat: boolean;
-  timestamp: number;
-}
-
 export class PhishingService {
-  private safeBrowsingCache: Map<string, CacheEntry> = new Map();
-  private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
-  private readonly API_KEY = process.env.GOOGLE_API_KEY;
-
   async analyzeUrl(urlString: string): Promise<PhishingAnalysis> {
     try {
       const url = new URL(urlString);
-      const indicators = this.checkIndicators(url);
-      
-      // Check Google Safe Browsing API if API key is available
-      let googleSafeBrowsingThreat = false;
-      let googleSafeBrowsingChecked = false;
-      
-      if (this.API_KEY) {
-        console.log(`[Phishing Service] Checking URL with Google Safe Browsing API: ${urlString}`);
-        const result = await this.checkGoogleSafeBrowsing(urlString);
-        if (result.success) {
-          googleSafeBrowsingThreat = result.isThreat;
-          googleSafeBrowsingChecked = true;
-          indicators.googleSafeBrowsing = googleSafeBrowsingThreat;
-          console.log(`[Phishing Service] Google API verification complete - Threat detected: ${googleSafeBrowsingThreat}`);
-        } else {
-          console.log(`[Phishing Service] Google API check failed, using heuristic analysis only`);
-        }
-      } else {
-        console.log(`[Phishing Service] No Google API key configured, using heuristic analysis only`);
-      }
-
-      const score = this.calculateRiskScore(indicators, url.hostname);
+      const indicators = this.checkIndicators(url, urlString);
+      const score = this.calculateRiskScore(indicators, url.hostname, urlString);
       const risk = this.getRiskLevel(score);
       const details = this.generateDetails(indicators);
       const recommendations = this.generateRecommendations(indicators, risk);
@@ -176,7 +168,8 @@ export class PhishingService {
           hostname: url.hostname,
           tld: url.hostname.split(".").pop() || "unknown",
           analyzedAt: new Date().toISOString(),
-          googleSafeBrowsingChecked,
+          urlLength: urlString.length,
+          subdomainCount: url.hostname.split(".").length - 2,
         },
       };
     } catch {
@@ -184,104 +177,7 @@ export class PhishingService {
     }
   }
 
-  private async checkGoogleSafeBrowsing(url: string): Promise<{ success: boolean; isThreat: boolean }> {
-    // Check cache first to minimize API calls
-    const cached = this.safeBrowsingCache.get(url);
-    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
-      return { success: true, isThreat: cached.isThreat };
-    }
-
-    try {
-      // Using Google Safe Browsing API v4
-      const apiUrl = `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${this.API_KEY}`;
-      
-      const requestBody = {
-        client: {
-          clientId: "cybersec-toolkit",
-          clientVersion: "1.0.0"
-        },
-        threatInfo: {
-          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
-          platformTypes: ["ANY_PLATFORM"],
-          threatEntryTypes: ["URL"],
-          threatEntries: [
-            { url: url }
-          ]
-        }
-      };
-
-      // Add timeout to prevent hanging requests
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        if (response.status === 400) {
-          console.error(`Google Safe Browsing API error: Invalid API key or request format - ${errorText}`);
-        } else if (response.status === 403) {
-          console.error(`Google Safe Browsing API error: API key not authorized or API not enabled - ${errorText}`);
-        } else if (response.status === 429) {
-          console.error(`Google Safe Browsing API error: Rate limit exceeded - ${errorText}`);
-        } else {
-          console.error(`Google Safe Browsing API error: ${response.status} - ${errorText}`);
-        }
-        return { success: false, isThreat: false };
-      }
-
-      const data = await response.json();
-      const isThreat = data.matches && data.matches.length > 0;
-      
-      if (isThreat) {
-        console.log(`[Google Safe Browsing] ⚠️ THREAT DETECTED for URL: ${url}`);
-        console.log(`[Google Safe Browsing] Threat types: ${data.matches.map((m: any) => m.threatType).join(', ')}`);
-      } else {
-        console.log(`[Google Safe Browsing] ✓ URL verified as safe: ${url}`);
-      }
-      
-      // Cache the result
-      this.safeBrowsingCache.set(url, {
-        isThreat,
-        timestamp: Date.now()
-      });
-
-      // Clean old cache entries to prevent memory bloat
-      this.cleanCache();
-
-      return { success: true, isThreat };
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.error('Google Safe Browsing check timed out after 5 seconds');
-      } else if (error.message?.includes('fetch')) {
-        console.error('Google Safe Browsing check failed: Network error -', error.message);
-      } else {
-        console.error('Google Safe Browsing check failed:', error.message || error);
-      }
-      return { success: false, isThreat: false };
-    }
-  }
-
-  private cleanCache(): void {
-    const now = Date.now();
-    const entries = Array.from(this.safeBrowsingCache.entries());
-    for (const [key, value] of entries) {
-      if (now - value.timestamp > this.CACHE_TTL) {
-        this.safeBrowsingCache.delete(key);
-      }
-    }
-  }
-
-  private checkIndicators(url: URL) {
+  private checkIndicators(url: URL, fullUrl: string) {
     const hostname = url.hostname.toLowerCase();
     return {
       ipBasedUrl: this.isIpBasedUrl(hostname),
@@ -293,7 +189,15 @@ export class PhishingService {
       homoglyphDetected: this.hasHomographAttack(hostname) || this.isTyposquatting(hostname),
       excessiveRedirects: this.hasExcessiveRedirects(url.href),
       suspiciousPort: this.hasSuspiciousPort(url.port),
-      googleSafeBrowsing: false as boolean,
+      suspiciousTLD: this.hasSuspiciousTLD(hostname),
+      excessiveLength: fullUrl.length > 200,
+      containsAtSymbol: fullUrl.includes('@'),
+      suspiciousSpecialChars: this.hasSuspiciousSpecialChars(fullUrl),
+      randomStringPattern: this.hasRandomStringPattern(hostname),
+      misleadingPath: this.hasMisleadingPath(url),
+      brandImpersonation: this.detectBrandImpersonation(hostname),
+      hexEncoding: this.hasHexEncoding(fullUrl),
+      dataUri: url.protocol === "data:",
     };
   }
 
@@ -466,10 +370,92 @@ export class PhishingService {
     return suspiciousPorts.includes(portNum) || portNum > 49152;
   }
 
-  private calculateRiskScore(indicators: PhishingAnalysis["indicators"], hostname: string): number {
+  private hasSuspiciousTLD(hostname: string): boolean {
+    const tld = hostname.split(".").pop() || "";
+    return SUSPICIOUS_TLDS.includes(tld.toLowerCase());
+  }
+
+  private hasSuspiciousSpecialChars(url: string): boolean {
+    const suspiciousPatterns = [
+      /%(?:[0-9a-fA-F]{2}){5,}/, // Excessive URL encoding
+      /\.\./,                     // Directory traversal
+      /[<>'"]/,                   // Script injection attempts
+      /javascript:/i,             // JavaScript protocol
+      /vbscript:/i,               // VBScript protocol
+      /file:/i,                   // File protocol
+    ];
+    return suspiciousPatterns.some(pattern => pattern.test(url));
+  }
+
+  private hasRandomStringPattern(hostname: string): boolean {
+    if (this.isLegitimateOrSubdomain(hostname)) {
+      return false;
+    }
+    
+    const parts = hostname.split(".");
+    const mainDomain = parts.length > 1 ? parts[parts.length - 2] : parts[0];
+    
+    const consonantVowelRatio = this.calculateConsonantVowelRatio(mainDomain);
+    const hasExcessiveDigits = /\d{4,}/.test(mainDomain);
+    const hasExcessiveHyphens = /-{2,}/.test(mainDomain) || (mainDomain.match(/-/g) || []).length > 3;
+    const isAllRandom = mainDomain.length > 8 && /^[a-z]{15,}$/i.test(mainDomain) && consonantVowelRatio > 4;
+    
+    return hasExcessiveDigits || hasExcessiveHyphens || isAllRandom;
+  }
+
+  private calculateConsonantVowelRatio(str: string): number {
+    const consonants = str.match(/[bcdfghjklmnpqrstvwxyz]/gi) || [];
+    const vowels = str.match(/[aeiou]/gi) || [];
+    if (vowels.length === 0) return 10;
+    return consonants.length / vowels.length;
+  }
+
+  private hasMisleadingPath(url: URL): boolean {
+    const path = url.pathname.toLowerCase();
+    const misleadingPatterns = [
+      /login/i,
+      /signin/i,
+      /account/i,
+      /verify/i,
+      /secure/i,
+      /update/i,
+      /banking/i,
+      /wallet/i,
+    ];
+    
+    if (!this.isLegitimateOrSubdomain(url.hostname)) {
+      return misleadingPatterns.some(pattern => pattern.test(path));
+    }
+    return false;
+  }
+
+  private detectBrandImpersonation(hostname: string): boolean {
+    if (this.isLegitimateOrSubdomain(hostname)) {
+      return false;
+    }
+    
+    const registrable = this.getRegistrableDomain(hostname);
+    
+    for (const brand of BRAND_KEYWORDS) {
+      if (registrable.includes(brand) && !this.isLegitimateOrSubdomain(registrable)) {
+        const legitDomain = LEGITIMATE_DOMAINS.find(d => d.includes(brand));
+        if (legitDomain && registrable !== legitDomain && !registrable.endsWith('.' + legitDomain)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private hasHexEncoding(url: string): boolean {
+    const hexPattern = /%[0-9a-fA-F]{2}/g;
+    const matches = url.match(hexPattern) || [];
+    return matches.length > 10;
+  }
+
+  private calculateRiskScore(indicators: PhishingAnalysis["indicators"], hostname: string, fullUrl: string): number {
     let score = 0;
     const weights = {
-      googleSafeBrowsing: 100, // CRITICAL: Google confirmed threat - instant max score
       ipBasedUrl: 35,
       suspiciousSubdomains: 25,
       shortUrl: 15,
@@ -478,27 +464,46 @@ export class PhishingService {
       homoglyphDetected: 80, // CRITICAL: Typosquatting impersonates legitimate sites
       excessiveRedirects: 20,
       suspiciousPort: 25,
+      suspiciousTLD: 30,
+      excessiveLength: 20,
+      containsAtSymbol: 40, // High risk - often used to hide real domain
+      suspiciousSpecialChars: 35,
+      randomStringPattern: 30,
+      misleadingPath: 25,
+      brandImpersonation: 75, // CRITICAL: Deliberate brand impersonation
+      hexEncoding: 30,
+      dataUri: 50, // High risk - data URIs can hide malicious content
       newDomain: 20,
       mediumDomain: 5,
       establishedDomain: -50, // Strong negative for verified legitimate domains
     };
 
-    // Google Safe Browsing has highest priority - if threat detected, immediately critical
-    if (indicators.googleSafeBrowsing) {
-      return 100; // Instant critical score for confirmed threats
-    }
-
-    // Typosquatting is CRITICAL - deliberate impersonation attempt
+    // Critical indicators - highest priority
+    if (indicators.brandImpersonation) score += weights.brandImpersonation;
     if (indicators.homoglyphDetected) score += weights.homoglyphDetected;
+    if (indicators.dataUri) score += weights.dataUri;
+    if (indicators.containsAtSymbol) score += weights.containsAtSymbol;
 
+    // High-risk indicators
+    if (indicators.suspiciousSpecialChars) score += weights.suspiciousSpecialChars;
     if (indicators.ipBasedUrl) score += weights.ipBasedUrl;
-    if (indicators.suspiciousSubdomains) score += weights.suspiciousSubdomains;
-    if (indicators.shortUrl) score += weights.shortUrl;
-    if (indicators.suspiciousKeywords) score += weights.suspiciousKeywords;
-    if (indicators.missingHttps) score += weights.missingHttps;
-    if (indicators.excessiveRedirects) score += weights.excessiveRedirects;
-    if (indicators.suspiciousPort) score += weights.suspiciousPort;
+    if (indicators.suspiciousTLD) score += weights.suspiciousTLD;
+    if (indicators.hexEncoding) score += weights.hexEncoding;
+    if (indicators.randomStringPattern) score += weights.randomStringPattern;
 
+    // Medium-risk indicators
+    if (indicators.suspiciousSubdomains) score += weights.suspiciousSubdomains;
+    if (indicators.suspiciousKeywords) score += weights.suspiciousKeywords;
+    if (indicators.misleadingPath) score += weights.misleadingPath;
+    if (indicators.suspiciousPort) score += weights.suspiciousPort;
+    if (indicators.excessiveRedirects) score += weights.excessiveRedirects;
+    if (indicators.excessiveLength) score += weights.excessiveLength;
+
+    // Lower-risk indicators
+    if (indicators.shortUrl) score += weights.shortUrl;
+    if (indicators.missingHttps) score += weights.missingHttps;
+
+    // Domain age factors
     if (indicators.domainAge === "new") score += weights.newDomain;
     if (indicators.domainAge === "medium") score += weights.mediumDomain;
     if (indicators.domainAge === "established") score += weights.establishedDomain;
@@ -512,20 +517,26 @@ export class PhishingService {
     if (indicators.missingHttps) suspiciousCount++;
     if (indicators.excessiveRedirects) suspiciousCount++;
     if (indicators.suspiciousPort) suspiciousCount++;
+    if (indicators.suspiciousTLD) suspiciousCount++;
+    if (indicators.randomStringPattern) suspiciousCount++;
+    if (indicators.misleadingPath) suspiciousCount++;
+    if (indicators.hexEncoding) suspiciousCount++;
 
     // If multiple indicators present, add combination penalty
-    if (suspiciousCount >= 3) {
-      score += 25; // High risk when multiple indicators combine
+    if (suspiciousCount >= 5) {
+      score += 30; // Critical risk when many indicators combine
+    } else if (suspiciousCount >= 3) {
+      score += 20; // High risk when multiple indicators combine
     } else if (suspiciousCount >= 2) {
-      score += 15; // Medium-high risk for 2 indicators
+      score += 10; // Medium-high risk for 2 indicators
     }
 
     // Extra penalty for multiple phishing keywords in domain name
     const keywordCount = this.countSuspiciousKeywords(hostname);
     if (keywordCount >= 3) {
-      score += 20; // Multiple keywords = likely phishing
+      score += 25; // Multiple keywords = likely phishing
     } else if (keywordCount >= 2) {
-      score += 10; // Two keywords = suspicious
+      score += 15; // Two keywords = suspicious
     }
 
     return Math.min(100, Math.max(0, score));
@@ -540,7 +551,6 @@ export class PhishingService {
 
   private generateDetails(indicators: PhishingAnalysis["indicators"]): string[] {
     const map: Record<string, string> = {
-      googleSafeBrowsing: "⚠️ FLAGGED BY GOOGLE SAFE BROWSING as malicious or phishing site",
       ipBasedUrl: "URL uses IP address instead of a domain name",
       suspiciousSubdomains: "Suspicious subdomain pattern detected",
       shortUrl: "URL shortening service detected",
@@ -549,6 +559,15 @@ export class PhishingService {
       homoglyphDetected: "⚠️ Typosquatting or lookalike domain detected - may impersonate a legitimate site",
       excessiveRedirects: "Multiple redirects detected in URL",
       suspiciousPort: "Non-standard or high port usage detected",
+      suspiciousTLD: "Domain uses a high-risk or commonly abused top-level domain",
+      excessiveLength: "URL is excessively long (often used to hide suspicious content)",
+      containsAtSymbol: "⚠️ URL contains @ symbol - may hide the real destination domain",
+      suspiciousSpecialChars: "Contains suspicious special characters or encoding patterns",
+      randomStringPattern: "Domain name appears randomly generated",
+      misleadingPath: "URL path contains misleading security-related terms",
+      brandImpersonation: "⚠️ CRITICAL: Domain appears to impersonate a well-known brand",
+      hexEncoding: "Excessive hexadecimal encoding detected - may hide malicious content",
+      dataUri: "⚠️ Data URI detected - can embed malicious content directly",
     };
 
     const details = Object.entries(indicators)
@@ -569,20 +588,31 @@ export class PhishingService {
   ): string[] {
     const recs: string[] = [];
 
-    if (indicators.googleSafeBrowsing) {
+    if (indicators.brandImpersonation || indicators.dataUri) {
       recs.push(
-        "⛔ DO NOT visit this URL - confirmed malicious by Google",
+        "⛔ DO NOT visit or interact with this URL - high risk of credential theft",
         "Do not enter any personal or financial information",
         "Report this URL to your IT security team immediately"
       );
+      return recs;
     }
 
-    if (["critical", "high"].includes(risk) && !indicators.googleSafeBrowsing) {
+    if (["critical", "high"].includes(risk)) {
       recs.push(
-        "Avoid entering personal or financial information.",
-        "Do not click or forward this link.",
-        "Report this URL to your security or IT team."
+        "Avoid entering personal or financial information",
+        "Do not click or forward this link",
+        "Verify the sender's identity through a separate channel"
       );
+      
+      if (indicators.homoglyphDetected) {
+        recs.push("This appears to be a lookalike domain - verify the correct spelling");
+      }
+      
+      if (indicators.containsAtSymbol) {
+        recs.push("URL contains @ symbol - the actual destination may differ from what appears");
+      }
+      
+      recs.push("Report this URL to your security or IT team");
     }
 
     if (indicators.missingHttps)
@@ -614,6 +644,15 @@ export class PhishingService {
         homoglyphDetected: false,
         excessiveRedirects: false,
         suspiciousPort: false,
+        suspiciousTLD: false,
+        excessiveLength: false,
+        containsAtSymbol: false,
+        suspiciousSpecialChars: false,
+        randomStringPattern: false,
+        misleadingPath: false,
+        brandImpersonation: false,
+        hexEncoding: false,
+        dataUri: false,
       },
       details: ["Invalid or malformed URL format."],
       recommendations: ["Verify the URL format and try again."],
@@ -621,6 +660,8 @@ export class PhishingService {
         hostname: "N/A",
         tld: "N/A",
         analyzedAt: new Date().toISOString(),
+        urlLength: 0,
+        subdomainCount: 0,
       },
     };
   }
