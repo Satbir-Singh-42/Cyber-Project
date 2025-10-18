@@ -156,6 +156,10 @@ export function PhishingDetector() {
                     <span className="font-mono">{analysis.metadata.urlLength} chars</span>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span>Subdomain Count</span>
+                    <span className="font-mono">{analysis.metadata.subdomainCount}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span>Domain Age</span>
                     <span className={analysis.indicators.domainAge === 'established' ? 'text-accent' : 'text-muted-foreground'}>
                       {analysis.indicators.domainAge}
@@ -203,6 +207,14 @@ export function PhishingDetector() {
                   <div className="flex items-center justify-between">
                     <span>Suspicious TLD</span>
                     {!analysis.indicators.suspiciousTLD ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Suspicious Subdomains</span>
+                    {!analysis.indicators.suspiciousSubdomains ? (
                       <Check className="h-4 w-4 text-accent" />
                     ) : (
                       <X className="h-4 w-4 text-destructive" />
@@ -259,6 +271,38 @@ export function PhishingDetector() {
                   <div className="flex items-center justify-between">
                     <span>Data URI</span>
                     {!analysis.indicators.dataUri ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Excessive Redirects</span>
+                    {!analysis.indicators.excessiveRedirects ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Suspicious Port</span>
+                    {!analysis.indicators.suspiciousPort ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Excessive Length</span>
+                    {!analysis.indicators.excessiveLength ? (
+                      <Check className="h-4 w-4 text-accent" />
+                    ) : (
+                      <X className="h-4 w-4 text-destructive" />
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Hex Encoding</span>
+                    {!analysis.indicators.hexEncoding ? (
                       <Check className="h-4 w-4 text-accent" />
                     ) : (
                       <X className="h-4 w-4 text-destructive" />

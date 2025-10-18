@@ -169,12 +169,31 @@ export class PhishingService {
           tld: url.hostname.split(".").pop() || "unknown",
           analyzedAt: new Date().toISOString(),
           urlLength: urlString.length,
-          subdomainCount: url.hostname.split(".").length - 2,
+          subdomainCount: this.calculateSubdomainCount(url.hostname),
         },
       };
     } catch {
       return this.invalidUrlResponse();
     }
+  }
+
+  private calculateSubdomainCount(hostname: string): number {
+    const parts = hostname.toLowerCase().split('.');
+    
+    if (parts.length <= 1) {
+      return 0;
+    }
+    
+    const multiLevelTLDs = ['co.uk', 'com.au', 'co.jp', 'co.nz', 'co.za', 'com.br', 'com.cn'];
+    
+    if (parts.length >= 3) {
+      const lastTwo = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`;
+      if (multiLevelTLDs.includes(lastTwo)) {
+        return Math.max(0, parts.length - 3);
+      }
+    }
+    
+    return Math.max(0, parts.length - 2);
   }
 
   private checkIndicators(url: URL, fullUrl: string) {
