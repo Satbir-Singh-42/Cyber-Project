@@ -25,21 +25,12 @@ export const users = pgTable("users", {
 
 export const scanResults = pgTable("scan_results", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  type: varchar("type").notNull(), // 'password', 'phishing', 'port', 'keylogger', 'file_integrity'
+  type: varchar("type").notNull(), // 'password', 'phishing', 'port', 'keylogger'
   target: text("target").notNull(),
   result: text("result").notNull(), // JSON string
   score: integer("score"),
   userId: varchar("user_id"), // Optional - null for guest scans
   timestamp: timestamp("timestamp").defaultNow(),
-});
-
-export const monitoredFiles = pgTable("monitored_files", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  filePath: text("file_path").notNull(),
-  hash: text("hash").notNull(),
-  size: integer("size").notNull(),
-  lastModified: timestamp("last_modified").notNull(),
-  isActive: boolean("is_active").default(true),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -72,19 +63,10 @@ export const insertScanResultSchema = createInsertSchema(scanResults).pick({
   userId: true,
 });
 
-export const insertMonitoredFileSchema = createInsertSchema(monitoredFiles).pick({
-  filePath: true,
-  hash: true,
-  size: true,
-  lastModified: true,
-});
-
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type ScanResult = typeof scanResults.$inferSelect;
 export type InsertScanResult = z.infer<typeof insertScanResultSchema>;
-export type MonitoredFile = typeof monitoredFiles.$inferSelect;
-export type InsertMonitoredFile = z.infer<typeof insertMonitoredFileSchema>;
 
 // API Request/Response schemas
 export const passwordAnalysisRequestSchema = z.object({
@@ -100,14 +82,8 @@ export const portScanRequestSchema = z.object({
   portRange: z.string().optional().default("1-1000"),
 });
 
-export const fileMonitorRequestSchema = z.object({
-  directory: z.string().min(1),
-  recursive: z.boolean().default(true),
-});
-
 export type PasswordAnalysisRequest = z.infer<typeof passwordAnalysisRequestSchema>;
 export type PhishingAnalysisRequest = z.infer<typeof phishingAnalysisRequestSchema>;
 export type PortScanRequest = z.infer<typeof portScanRequestSchema>;
-export type FileMonitorRequest = z.infer<typeof fileMonitorRequestSchema>;
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
 export type LoginRequest = z.infer<typeof loginRequestSchema>;

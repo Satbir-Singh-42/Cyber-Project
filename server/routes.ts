@@ -5,12 +5,10 @@ import { PasswordService } from "./services/password-service";
 import { PhishingService } from "./services/phishing-service";
 import { PortService } from "./services/port-service";
 import { KeyloggerService } from "./services/keylogger-service";
-import { FileIntegrityService } from "./services/file-integrity-service";
 import { 
   passwordAnalysisRequestSchema,
   phishingAnalysisRequestSchema,
-  portScanRequestSchema,
-  fileMonitorRequestSchema
+  portScanRequestSchema
 } from "@shared/schema";
 
 // Validation middleware
@@ -32,7 +30,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const phishingService = new PhishingService();
   const portService = new PortService();
   const keyloggerService = new KeyloggerService();
-  const fileIntegrityService = new FileIntegrityService();
 
 
   // Password Analysis
@@ -140,83 +137,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success });
     } catch (error: any) {
       res.status(500).json({ message: 'Process termination failed' });
-    }
-  });
-
-  // File Integrity Monitoring
-  app.post("/api/security/file-integrity-init", [
-    body('directory')
-      .matches(/^[a-zA-Z0-9\/_.-]+$/)
-      .withMessage('Directory path contains invalid characters')
-      .isLength({ min: 1, max: 500 })
-      .withMessage('Directory path must be between 1 and 500 characters')
-      .trim(),
-    body('recursive')
-      .optional()
-      .isBoolean()
-      .withMessage('Recursive must be a boolean value'),
-    handleValidationErrors
-  ], async (req: Request, res: Response) => {
-    try {
-      const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
-      await fileIntegrityService.initializeBaseline(directory, recursive);
-      
-      const baselineInfo = fileIntegrityService.getBaselineInfo();
-      res.json({ 
-        message: "Baseline initialized successfully",
-        ...baselineInfo
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: 'File integrity initialization failed' });
-    }
-  });
-
-  app.post("/api/security/file-integrity-check", [
-    body('directory')
-      .matches(/^[a-zA-Z0-9\/_.-]+$/)
-      .withMessage('Directory path contains invalid characters')
-      .isLength({ min: 1, max: 500 })
-      .withMessage('Directory path must be between 1 and 500 characters')
-      .trim(),
-    body('recursive')
-      .optional()
-      .isBoolean()
-      .withMessage('Recursive must be a boolean value'),
-    handleValidationErrors
-  ], async (req: Request, res: Response) => {
-    try {
-      const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
-      const result = await fileIntegrityService.checkIntegrity(directory, recursive);
-      res.json(result);
-    } catch (error: any) {
-      res.status(500).json({ message: 'File integrity check failed' });
-    }
-  });
-
-  app.post("/api/security/file-integrity-update", [
-    body('directory')
-      .matches(/^[a-zA-Z0-9\/_.-]+$/)
-      .withMessage('Directory path contains invalid characters')
-      .isLength({ min: 1, max: 500 })
-      .withMessage('Directory path must be between 1 and 500 characters')
-      .trim(),
-    body('recursive')
-      .optional()
-      .isBoolean()
-      .withMessage('Recursive must be a boolean value'),
-    handleValidationErrors
-  ], async (req: Request, res: Response) => {
-    try {
-      const { directory, recursive } = fileMonitorRequestSchema.parse(req.body);
-      await fileIntegrityService.updateBaseline(directory, recursive);
-      
-      const baselineInfo = fileIntegrityService.getBaselineInfo();
-      res.json({ 
-        message: "Baseline updated successfully",
-        ...baselineInfo
-      });
-    } catch (error: any) {
-      res.status(500).json({ message: 'File integrity update failed' });
     }
   });
 

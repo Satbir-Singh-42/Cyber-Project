@@ -6,7 +6,6 @@ import {
   Fish, 
   Network, 
   Keyboard, 
-  FilePen, 
   Home,
   ChevronLeft,
   ChevronRight,
@@ -53,12 +52,6 @@ const sidebarItems: SidebarItem[] = [
     label: "Keylogger Detector",
     path: "/keylogger-detector",
     description: "Monitor for malicious processes"
-  },
-  {
-    icon: FilePen,
-    label: "File Integrity Monitor",
-    path: "/file-integrity",
-    description: "Track file system changes"
   },
   {
     icon: Code,
