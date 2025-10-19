@@ -51,8 +51,12 @@ const COMMON_SERVICES: { [key: number]: string } = {
 };
 
 export class PortService {
-  async scanPorts(target: string, portRange: string = '1-1000'): Promise<PortScanResult> {
+  private readonly MAX_SCAN_DURATION = 10000; // 10 seconds max
+  private readonly DEFAULT_PORT_TIMEOUT = 1000; // 1 second per port (reduced from 2)
+
+  async scanPorts(target: string, portRange: string = '1-1000', maxDuration?: number): Promise<PortScanResult> {
     const startTime = Date.now();
+    const scanDeadline = startTime + (maxDuration || this.MAX_SCAN_DURATION);
     const ports = this.parsePortRange(portRange);
     const openPorts: OpenPort[] = [];
 
@@ -71,7 +75,13 @@ export class PortService {
     const chunks = this.chunkArray(ports, concurrencyLimit);
 
     for (const chunk of chunks) {
-      const promises = chunk.map(port => this.scanPort(target, port));
+      // Check if we've exceeded the scan deadline
+      if (Date.now() >= scanDeadline) {
+        console.warn(`Scan timeout reached after ${Date.now() - startTime}ms`);
+        break;
+      }
+
+      const promises = chunk.map(port => this.scanPort(target, port, this.DEFAULT_PORT_TIMEOUT));
       const results = await Promise.allSettled(promises);
       
       results.forEach((result, index) => {
@@ -82,7 +92,7 @@ export class PortService {
       
       // Add small delay between chunks to be respectful
       if (chunks.indexOf(chunk) < chunks.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 50)); // Reduced from 100ms
       }
     }
 
@@ -150,24 +160,22 @@ export class PortService {
     return chunks;
   }
 
-  private async scanPort(target: string, port: number): Promise<OpenPort | null> {
+  private async scanPort(target: string, port: number, timeout: number = 1000): Promise<OpenPort | null> {
     return new Promise((resolve) => {
       const socket = new Socket();
-      const timeout = 2000; // 2 second timeout
 
       socket.setTimeout(timeout);
 
       socket.on('connect', async () => {
         socket.destroy();
         
-        // Try to get banner information
-        const banner = await this.getBanner(target, port);
+        // Skip banner grabbing for faster results
+        // (Banner grabbing can add 3+ seconds per port)
         
         resolve({
           port,
           state: 'open',
           service: COMMON_SERVICES[port] || 'Unknown',
-          banner
         });
       });
 
@@ -281,6 +289,7 @@ export class PortService {
 
   async quickScan(target: string): Promise<PortScanResult> {
     const commonPorts = this.getCommonPorts();
-    return this.scanPorts(target, commonPorts.join(','));
+    // Quick scan with shorter timeout (5 seconds max)
+    return this.scanPorts(target, commonPorts.join(','), 5000);
   }
 }
