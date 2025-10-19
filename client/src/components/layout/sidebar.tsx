@@ -81,23 +81,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
       )}>
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          {!collapsed && (
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Shield className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-foreground">CyberSec</h1>
-                <p className="text-xs text-muted-foreground">Security Toolkit</p>
-              </div>
-            </div>
-          )}
-          {collapsed && (
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center mx-auto">
-              <Shield className="h-6 w-6 text-primary-foreground" />
-            </div>
-          )}
+        <div className="flex items-center justify-center">
           <Button
             variant="ghost"
             size="sm"
@@ -106,7 +90,7 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
               setCollapsed(newCollapsed);
               onToggle?.(newCollapsed);
             }}
-            className={cn("p-1 h-8 w-8", collapsed && "absolute top-4 right-1")}
+            className="p-1 h-8 w-8"
             data-testid="button-toggle-sidebar"
           >
             {collapsed ? (
