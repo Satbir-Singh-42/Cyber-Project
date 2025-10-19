@@ -6,7 +6,6 @@ import {
   Fish, 
   Network, 
   Keyboard, 
-  FilePen, 
   Shield, 
   AlertTriangle,
   ArrowRight
@@ -66,14 +65,6 @@ export default function Dashboard() {
       path: '/keylogger-detector', 
       color: 'text-chart-4',
       bgColor: 'bg-chart-4/10'
-    },
-    {
-      title: 'File Integrity Monitor',
-      description: 'Track file system changes',
-      icon: FilePen,
-      path: '/file-integrity',
-      color: 'text-chart-5', 
-      bgColor: 'bg-chart-5/10'
     }
   ];
 
@@ -148,8 +139,8 @@ export default function Dashboard() {
               <ul className="space-y-1 text-muted-foreground">
                 <li>• Run password analysis on critical accounts</li>
                 <li>• Scan network ports weekly</li>
-                <li>• Monitor file integrity on sensitive directories</li>
                 <li>• Check for keyloggers regularly</li>
+                <li>• Review suspicious URLs before clicking</li>
               </ul>
             </div>
             <div>

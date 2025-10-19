@@ -18,6 +18,7 @@
   - [Phishing URL Detector](#2-phishing-url-detector)
   - [Network Port Scanner](#3-network-port-scanner)
   - [Keylogger Detection System](#4-keylogger-detection-system)
+  - [File Integrity Monitor](#5-file-integrity-monitor)
 - [Technology Stack](#-technology-stack)
 - [Installation & Setup](#-installation--setup)
 - [API Documentation](#-api-documentation)
@@ -34,6 +35,7 @@
 - 🎣 **Phishing URL Detector** - Multi-layered heuristic phishing detection with 17+ indicators
 - 🌐 **Network Port Scanner** - Intelligent port scanning with service detection and banner grabbing
 - ⌨️ **Keylogger Detection System** - Process behavior analysis for malware detection
+- 📁 **File Integrity Monitor** - Cryptographic hash-based file change detection
 
 ---
 
@@ -67,6 +69,7 @@
 │  │  - Phishing Detection Service                         │   │
 │  │  - Port Scanning Service                              │   │
 │  │  - Keylogger Detection Service                        │   │
+│  │  - File Integrity Service                             │   │
 │  └──────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -515,6 +518,7 @@ Low:
 
 ---
 
+### 5. File Integrity Monitor
 
 #### Technical Approach
 
@@ -869,7 +873,11 @@ Response:
 }
 ```
 
+#### 5. File Integrity Check
 ```http
+POST /file-integrity-init
+POST /file-integrity-check
+POST /file-integrity-update
 
 Request Body:
 {
@@ -1009,6 +1017,7 @@ Response Time:     <100ms (avg)
    - Service detection showcase
    - Security assessment explanation
 
+4. **File Integrity Monitor** (Practical application)
    - Initialize baseline
    - Modify a file
    - Detect changes

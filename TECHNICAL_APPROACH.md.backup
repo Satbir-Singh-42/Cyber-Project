@@ -12,6 +12,7 @@ This document provides detailed technical approaches, algorithms, and implementa
 2. [Phishing URL Detector](#2-phishing-url-detector)
 3. [Network Port Scanner](#3-network-port-scanner)
 4. [Keylogger Detection System](#4-keylogger-detection-system)
+5. [File Integrity Monitor](#5-file-integrity-monitor)
 6. [System Architecture](#system-architecture)
 
 ---
@@ -1970,6 +1971,7 @@ useEffect(() => {
 
 ---
 
+## 5. File Integrity Monitor
 
 ### Technical Approach
 
@@ -2706,6 +2708,7 @@ const suspiciousFiles = report.changes.added.filter(c =>
 │  │  ├── Phishing Service (Heuristics, Typosquatting)    │    │
 │  │  ├── Port Service (TCP Scan, Banner Grab)            │    │
 │  │  ├── Keylogger Service (Process Analysis, Risk)      │    │
+│  │  └── File Integrity Service (SHA-256, Baseline)      │    │
 │  └──────────────────────────────────────────────────────┘    │
 └───────────────────────────────────────────────────────────────┘
 
