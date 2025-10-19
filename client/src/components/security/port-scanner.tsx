@@ -5,8 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Network, Play, Zap } from 'lucide-react';
+import { Network, Play, Zap, AlertCircle } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface OpenPort {
   port: number;
@@ -28,30 +29,64 @@ export function PortScanner() {
   const [target, setTarget] = useState('');
   const [portRange, setPortRange] = useState('1-1000');
   const [scanResult, setScanResult] = useState<PortScanResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const scanPortsMutation = useMutation({
     mutationFn: async ({ target, portRange }: { target: string; portRange: string }) => {
       const response = await apiRequest('POST', '/api/security/port-scan', { target, portRange });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to scan ports');
+      }
       return response.json();
     },
     onSuccess: (data) => {
       setScanResult(data);
+      setErrorMessage(null);
+      toast({
+        title: "Scan Complete",
+        description: `Found ${data.openPorts.length} open ports on ${data.target}`,
+      });
     },
     onError: (error: any) => {
       console.error('Failed to scan ports:', error);
+      const message = error.message || 'Failed to scan ports. Please check the target and try again.';
+      setErrorMessage(message);
+      toast({
+        title: "Scan Failed",
+        description: message,
+        variant: "destructive",
+      });
     },
   });
 
   const quickScanMutation = useMutation({
     mutationFn: async (target: string) => {
       const response = await apiRequest('POST', '/api/security/port-scan-quick', { target });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to perform quick scan');
+      }
       return response.json();
     },
     onSuccess: (data) => {
       setScanResult(data);
+      setErrorMessage(null);
+      toast({
+        title: "Quick Scan Complete",
+        description: `Found ${data.openPorts.length} open ports on ${data.target}`,
+      });
     },
     onError: (error: any) => {
       console.error('Failed to perform quick scan:', error);
+      const message = error.message || 'Failed to perform quick scan. Please check the target and try again.';
+      setErrorMessage(message);
+      toast({
+        title: "Quick Scan Failed",
+        description: message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -183,6 +218,18 @@ export function PortScanner() {
                 </div>
               </div>
             </>
+          )}
+
+          {errorMessage && (
+            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-destructive mb-1">Error</h4>
+                  <p className="text-sm text-destructive/90">{errorMessage}</p>
+                </div>
+              </div>
+            </div>
           )}
 
           {isScanning && (
