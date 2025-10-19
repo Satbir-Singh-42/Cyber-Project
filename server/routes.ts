@@ -17,8 +17,10 @@ import {
 const handleValidationErrors = (req: Request, res: Response, next: any) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.error('Validation errors:', errors.array());
+    const errorMessages = errors.array().map(e => e.msg).join(', ');
     return res.status(400).json({ 
-      message: 'Invalid input data', 
+      message: errorMessages || 'Invalid input data', 
       errors: errors.array() 
     });
   }
