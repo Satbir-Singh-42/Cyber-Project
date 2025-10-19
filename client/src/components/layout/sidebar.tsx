@@ -81,25 +81,48 @@ export function Sidebar({ isOpen, onClose, onToggle }: SidebarProps) {
       )}>
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              const newCollapsed = !collapsed;
-              setCollapsed(newCollapsed);
-              onToggle?.(newCollapsed);
-            }}
-            className="p-1 h-8 w-8"
-            data-testid="button-toggle-sidebar"
-          >
-            {collapsed ? (
+        {collapsed ? (
+          <div className="flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const newCollapsed = !collapsed;
+                setCollapsed(newCollapsed);
+                onToggle?.(newCollapsed);
+              }}
+              className="p-1 h-8 w-8"
+              data-testid="button-toggle-sidebar"
+            >
               <ChevronRight className="h-5 w-5" />
-            ) : (
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <Shield className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-foreground">CyberSec</h1>
+                <p className="text-xs text-muted-foreground">Security Toolkit</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const newCollapsed = !collapsed;
+                setCollapsed(newCollapsed);
+                onToggle?.(newCollapsed);
+              }}
+              className="p-1 h-8 w-8"
+              data-testid="button-toggle-sidebar"
+            >
               <ChevronLeft className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Navigation Items */}
