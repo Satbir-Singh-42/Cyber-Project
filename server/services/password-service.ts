@@ -100,21 +100,34 @@ export class PasswordService {
     // Use zxcvbn for comprehensive dictionary checking
     const result = zxcvbn(password);
     
-    // zxcvbn detects dictionary words, common passwords, patterns, etc.
-    // If it found dictionary matches or the password is too weak, flag it
+    // Check if zxcvbn found any dictionary words
+    // zxcvbn's sequence array contains the pattern breakdown
     const hasDictionaryMatch = result.sequence.some(seq => 
-      seq.pattern === 'dictionary' || 
-      seq.pattern === 'spatial' || 
-      seq.pattern === 'repeat' ||
-      seq.pattern === 'sequence'
+      seq.pattern === 'dictionary'
     );
     
-    // Also check our manual lists as fallback
+    // Also check our manual lists
     const lowerPassword = password.toLowerCase();
-    const hasManualMatch = COMMON_PASSWORDS.some(common => lowerPassword.includes(common)) ||
-                          DICTIONARY_WORDS.some(word => lowerPassword.includes(word));
     
-    return hasDictionaryMatch || hasManualMatch;
+    // Check common passwords (these should match anywhere in the string)
+    const hasCommonPassword = COMMON_PASSWORDS.some(common => 
+      lowerPassword.includes(common)
+    );
+    
+    // For dictionary words, check if they appear as complete or significant parts
+    // Only flag words that are 4+ characters to avoid false positives like "in", "at"
+    const hasDictionaryWord = DICTIONARY_WORDS.some(word => {
+      if (word.length < 4) {
+        // For short words, check if they appear as whole words (with boundaries)
+        const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+        return wordRegex.test(password);
+      } else {
+        // For longer words (4+ chars), check if they appear anywhere
+        return lowerPassword.includes(word);
+      }
+    });
+    
+    return hasDictionaryMatch || hasCommonPassword || hasDictionaryWord;
   }
 
   private calculateEntropy(password: string): number {
