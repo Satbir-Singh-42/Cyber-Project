@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import zxcvbn from 'zxcvbn';
 
 export interface PasswordAnalysis {
   score: number;
@@ -28,10 +29,41 @@ const COMMON_PASSWORDS = [
 ];
 
 const DICTIONARY_WORDS = [
+  // Common nouns
   'love', 'hate', 'life', 'death', 'fire', 'water', 'earth', 'wind',
+  'home', 'house', 'door', 'window', 'room', 'car', 'bike', 'truck',
+  'phone', 'computer', 'table', 'chair', 'book', 'pen', 'paper',
+  'food', 'drink', 'coffee', 'tea', 'beer', 'wine', 'pizza', 'burger',
+  'dog', 'cat', 'bird', 'fish', 'horse', 'lion', 'tiger', 'bear',
+  'tree', 'flower', 'rose', 'grass', 'sun', 'moon', 'star', 'sky',
+  'ocean', 'sea', 'river', 'lake', 'mountain', 'hill', 'valley',
+  'city', 'town', 'street', 'road', 'highway', 'bridge',
+  'work', 'job', 'office', 'school', 'college', 'university',
+  'money', 'cash', 'bank', 'dollar', 'euro', 'gold', 'silver',
+  'time', 'day', 'night', 'morning', 'evening', 'week', 'month', 'year',
+  'spring', 'summer', 'fall', 'winter', 'monday', 'tuesday', 'wednesday',
+  'thursday', 'friday', 'saturday', 'sunday', 'january', 'february',
+  'march', 'april', 'june', 'july', 'august', 'september', 'october',
+  'november', 'december',
+  // Common adjectives
   'happy', 'sad', 'angry', 'peace', 'war', 'light', 'dark', 'good',
   'evil', 'fast', 'slow', 'big', 'small', 'hot', 'cold', 'sweet',
-  'bitter', 'strong', 'weak', 'rich', 'poor', 'young', 'old'
+  'bitter', 'strong', 'weak', 'rich', 'poor', 'young', 'old',
+  'new', 'old', 'great', 'best', 'nice', 'pretty', 'beautiful',
+  'smart', 'stupid', 'easy', 'hard', 'simple', 'complex',
+  // Common verbs
+  'have', 'want', 'need', 'like', 'hate', 'love', 'know', 'think',
+  'make', 'take', 'give', 'come', 'help', 'play', 'work', 'live',
+  // Names
+  'john', 'mary', 'james', 'robert', 'michael', 'william', 'david',
+  'richard', 'joseph', 'thomas', 'charles', 'daniel', 'matthew',
+  'patricia', 'jennifer', 'linda', 'elizabeth', 'barbara', 'susan',
+  'jessica', 'sarah', 'karen', 'nancy', 'lisa', 'betty', 'ashley',
+  // Common words in passwords
+  'super', 'mega', 'ultra', 'power', 'master', 'king', 'queen',
+  'prince', 'princess', 'hero', 'winner', 'champion', 'legend',
+  'magic', 'lucky', 'special', 'secret', 'private', 'secure',
+  'safe', 'trust', 'believe', 'hope', 'dream', 'wish'
 ];
 
 export class PasswordService {
@@ -65,9 +97,24 @@ export class PasswordService {
   }
 
   private containsDictionaryWords(password: string): boolean {
+    // Use zxcvbn for comprehensive dictionary checking
+    const result = zxcvbn(password);
+    
+    // zxcvbn detects dictionary words, common passwords, patterns, etc.
+    // If it found dictionary matches or the password is too weak, flag it
+    const hasDictionaryMatch = result.sequence.some(seq => 
+      seq.pattern === 'dictionary' || 
+      seq.pattern === 'spatial' || 
+      seq.pattern === 'repeat' ||
+      seq.pattern === 'sequence'
+    );
+    
+    // Also check our manual lists as fallback
     const lowerPassword = password.toLowerCase();
-    return COMMON_PASSWORDS.some(common => lowerPassword.includes(common)) ||
-           DICTIONARY_WORDS.some(word => lowerPassword.includes(word));
+    const hasManualMatch = COMMON_PASSWORDS.some(common => lowerPassword.includes(common)) ||
+                          DICTIONARY_WORDS.some(word => lowerPassword.includes(word));
+    
+    return hasDictionaryMatch || hasManualMatch;
   }
 
   private calculateEntropy(password: string): number {
