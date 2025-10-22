@@ -1,4 +1,5 @@
 import { URL } from "url";
+import axios from "axios";
 
 export interface PhishingAnalysis {
   score: number;
@@ -22,6 +23,7 @@ export interface PhishingAnalysis {
     brandImpersonation: boolean;
     hexEncoding: boolean;
     dataUri: boolean;
+    googleSafeBrowsingThreat: boolean;
   };
   details: string[];
   recommendations: string[];
@@ -31,6 +33,7 @@ export interface PhishingAnalysis {
     analyzedAt: string;
     urlLength: number;
     subdomainCount: number;
+    googleSafeBrowsingChecked: boolean;
   };
 }
 
@@ -152,7 +155,11 @@ export class PhishingService {
   async analyzeUrl(urlString: string): Promise<PhishingAnalysis> {
     try {
       const url = new URL(urlString);
-      const indicators = this.checkIndicators(url, urlString);
+      
+      // Check Google Safe Browsing API
+      const googleThreat = await this.checkGoogleSafeBrowsing(urlString);
+      
+      const indicators = this.checkIndicators(url, urlString, googleThreat);
       const score = this.calculateRiskScore(indicators, url.hostname, urlString);
       const risk = this.getRiskLevel(score);
       const details = this.generateDetails(indicators);
@@ -170,10 +177,49 @@ export class PhishingService {
           analyzedAt: new Date().toISOString(),
           urlLength: urlString.length,
           subdomainCount: this.calculateSubdomainCount(url.hostname),
+          googleSafeBrowsingChecked: googleThreat !== null,
         },
       };
     } catch {
       return this.invalidUrlResponse();
+    }
+  }
+
+  private async checkGoogleSafeBrowsing(url: string): Promise<boolean | null> {
+    const apiKey = process.env.GOOGLE_API_KEY;
+    
+    // If no API key, skip Google Safe Browsing check
+    if (!apiKey) {
+      return null;
+    }
+
+    try {
+      const response = await axios.post(
+        `https://safebrowsing.googleapis.com/v4/threatMatches:find?key=${apiKey}`,
+        {
+          client: {
+            clientId: "cybersec-toolkit",
+            clientVersion: "1.0.0"
+          },
+          threatInfo: {
+            threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+            platformTypes: ["ANY_PLATFORM"],
+            threatEntryTypes: ["URL"],
+            threatEntries: [{ url }]
+          }
+        },
+        {
+          timeout: 5000,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      );
+
+      // If matches found, it's a threat
+      return response.data.matches && response.data.matches.length > 0;
+    } catch (error) {
+      // If API call fails, return null (don't penalize the URL)
+      console.error('Google Safe Browsing API error:', error instanceof Error ? error.message : 'Unknown error');
+      return null;
     }
   }
 
@@ -196,7 +242,7 @@ export class PhishingService {
     return Math.max(0, parts.length - 2);
   }
 
-  private checkIndicators(url: URL, fullUrl: string) {
+  private checkIndicators(url: URL, fullUrl: string, googleThreat: boolean | null) {
     const hostname = url.hostname.toLowerCase();
     return {
       ipBasedUrl: this.isIpBasedUrl(hostname),
@@ -217,6 +263,7 @@ export class PhishingService {
       brandImpersonation: this.detectBrandImpersonation(hostname),
       hexEncoding: this.hasHexEncoding(fullUrl),
       dataUri: url.protocol === "data:",
+      googleSafeBrowsingThreat: googleThreat === true,
     };
   }
 
@@ -492,12 +539,14 @@ export class PhishingService {
       brandImpersonation: 75, // CRITICAL: Deliberate brand impersonation
       hexEncoding: 30,
       dataUri: 50, // High risk - data URIs can hide malicious content
+      googleSafeBrowsingThreat: 100, // CRITICAL: Google confirmed malicious/phishing
       newDomain: 20,
       mediumDomain: 5,
       establishedDomain: -50, // Strong negative for verified legitimate domains
     };
 
     // Critical indicators - highest priority
+    if (indicators.googleSafeBrowsingThreat) score += weights.googleSafeBrowsingThreat; // Google confirmed threat
     if (indicators.brandImpersonation) score += weights.brandImpersonation;
     if (indicators.homoglyphDetected) score += weights.homoglyphDetected;
     if (indicators.dataUri) score += weights.dataUri;
@@ -570,6 +619,7 @@ export class PhishingService {
 
   private generateDetails(indicators: PhishingAnalysis["indicators"]): string[] {
     const map: Record<string, string> = {
+      googleSafeBrowsingThreat: "🚨 CRITICAL: Google Safe Browsing identified this URL as malicious, phishing, or harmful",
       ipBasedUrl: "URL uses IP address instead of a domain name",
       suspiciousSubdomains: "Suspicious subdomain pattern detected",
       shortUrl: "URL shortening service detected",
@@ -672,6 +722,7 @@ export class PhishingService {
         brandImpersonation: false,
         hexEncoding: false,
         dataUri: false,
+        googleSafeBrowsingThreat: false,
       },
       details: ["Invalid or malformed URL format."],
       recommendations: ["Verify the URL format and try again."],
@@ -681,6 +732,7 @@ export class PhishingService {
         analyzedAt: new Date().toISOString(),
         urlLength: 0,
         subdomainCount: 0,
+        googleSafeBrowsingChecked: false,
       },
     };
   }
