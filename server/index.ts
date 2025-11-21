@@ -8,56 +8,61 @@ import { setupVite, serveStatic, log } from "./vite";
 const app = express();
 
 // Trust proxy for accurate rate limiting
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Security Headers (Development-friendly CSP)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Allow inline scripts for development
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket connections for Vite HMR
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
-      workerSrc: ["'self'", "blob:"], // Allow web workers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Allow inline scripts for development
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "ws:", "wss:"], // Allow WebSocket connections for Vite HMR
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+        workerSrc: ["'self'", "blob:"], // Allow web workers
+      },
     },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Rate limiting for API routes only
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 1000 : 100, // More lenient in development
+  max: process.env.NODE_ENV === "development" ? 1000 : 100, // More lenient in development
   message: {
-    error: 'Too many requests from this IP, please try again later.'
+    error: "Too many requests from this IP, please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
     // Skip rate limiting for static assets and HMR in development
-    return req.path.startsWith('/@') || 
-           req.path.startsWith('/node_modules') || 
-           req.path.endsWith('.js') || 
-           req.path.endsWith('.css') || 
-           req.path.endsWith('.map') ||
-           req.path.endsWith('.svg') ||
-           req.path.endsWith('.png') ||
-           req.path.endsWith('.jpg') ||
-           req.path.endsWith('.ico');
-  }
+    return (
+      req.path.startsWith("/@") ||
+      req.path.startsWith("/node_modules") ||
+      req.path.endsWith(".js") ||
+      req.path.endsWith(".css") ||
+      req.path.endsWith(".map") ||
+      req.path.endsWith(".svg") ||
+      req.path.endsWith(".png") ||
+      req.path.endsWith(".jpg") ||
+      req.path.endsWith(".ico")
+    );
+  },
 });
 
 // Slower rate limiting for security endpoints
 const securityLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 200 : 20, // More lenient in development
+  max: process.env.NODE_ENV === "development" ? 200 : 20, // More lenient in development
   message: {
-    error: 'Too many security scan requests from this IP, please try again later.'
+    error:
+      "Too many security scan requests from this IP, please try again later.",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -71,35 +76,34 @@ const speedLimiter = slowDown({
   validate: { delayMs: false }, // Disable deprecation warning
 });
 
-app.use('/api', limiter);
-app.use('/api/security', securityLimiter);
-app.use('/api/security', speedLimiter);
+app.use("/api", limiter);
+app.use("/api/security", securityLimiter);
+app.use("/api/security", speedLimiter);
 
 // Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
-
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
 // Secure CORS configuration
 app.use((req, res, next) => {
   const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5000',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:5000'
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5000",
   ];
-  
+
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin as string)) {
-    res.header('Access-Control-Allow-Origin', origin);
+    res.header("Access-Control-Allow-Origin", origin);
   }
-  
-  res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Accept');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  
+
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type,Accept");
+  res.header("Access-Control-Max-Age", "86400"); // 24 hours
+
   // Handle preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
   next();
@@ -161,12 +165,15 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(
+    {
+      port,
+      host: process.platform === "win32" ? "localhost" : "0.0.0.0",
+      reusePort: process.platform !== "win32",
+    },
+    () => {
+      log(`serving on port ${port}`);
+    }
+  );
 })();
