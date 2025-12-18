@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Environment validation
-const requiredEnvVars = ["DATABASE_URL", "GOOGLE_API_KEY"];
+const requiredEnvVars = ["GOOGLE_API_KEY"];
 const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -36,14 +36,7 @@ if (!apiKey || apiKey.length < 30) {
   process.exit(1);
 }
 
-// Validate database URL format
-const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl.startsWith("postgresql://")) {
-  console.error(
-    "❌ Invalid DATABASE_URL format. Expected PostgreSQL connection string."
-  );
-  process.exit(1);
-}
+
 
 console.log("✅ Environment validation passed");
 console.log("🚀 Starting SolarSense AI production server...");
