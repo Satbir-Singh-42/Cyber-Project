@@ -9,30 +9,30 @@ export interface AIThreatAnalysis {
 }
 
 export class AIThreatAnalyzer {
-  private openaiApiKey: string;
+  private geminiApiKey: string;
 
   constructor() {
-    this.openaiApiKey = process.env.OPENAI_API_KEY || '';
+    this.geminiApiKey = process.env.GOOGLE_API_KEY || '';
   }
 
   async analyzeUrlWithAI(url: string, indicators: any): Promise<AIThreatAnalysis> {
-    // If no OpenAI key, return minimal analysis
-    if (!this.openaiApiKey) {
+    // If no Gemini key, return minimal analysis
+    if (!this.geminiApiKey) {
       return {
         aiScore: 0,
         confidence: 0,
         threatType: 'unknown',
-        explanation: 'AI analysis unavailable - no OpenAI API key configured',
+        explanation: 'AI analysis unavailable - no GOOGLE_API_KEY configured',
         verified: false
       };
     }
 
     try {
-      const prompt = `You are a cybersecurity expert analyzing phishing URLs. 
-      
-URL to analyze: ${url}
+      const prompt = `You are a cybersecurity expert analyzing phishing URLs. Analyze the following URL and security indicators:
 
-Security indicators detected:
+URL: ${url}
+
+Security Indicators Detected:
 - IP-based URL: ${indicators.ipBasedUrl}
 - Suspicious subdomains: ${indicators.suspiciousSubdomains}
 - Short URL service: ${indicators.shortUrl}
@@ -42,50 +42,54 @@ Security indicators detected:
 - Brand impersonation: ${indicators.brandImpersonation}
 - Suspicious TLD: ${indicators.suspiciousTLD}
 
-Based on these indicators, provide a JSON response with:
+Provide a JSON response with:
 1. threatLevel (0-100): your AI assessment of threat level
-2. threatType: what type of threat this is (phishing, malware, spam, legitimate, etc.)
-3. explanation: brief technical explanation of why you assess it this way
-4. keyRisks: array of top 3 risks detected
+2. threatType: what type of threat (phishing, malware, spam, legitimate, etc.)
+3. explanation: brief technical explanation of your assessment
 
-Format your response as valid JSON only, no other text.`;
+Respond ONLY with valid JSON, no other text.`;
 
       const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`,
         {
-          model: 'gpt-4-turbo',
-          messages: [
+          contents: [
             {
-              role: 'system',
-              content: 'You are a cybersecurity threat analysis expert. Respond only with valid JSON.'
-            },
-            {
-              role: 'user',
-              content: prompt
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
             }
           ],
-          temperature: 0.7,
-          max_tokens: 500
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500
+          }
         },
         {
           headers: {
-            'Authorization': `Bearer ${this.openaiApiKey}`,
             'Content-Type': 'application/json'
           },
           timeout: 10000
         }
       );
 
-      if (response.data.choices && response.data.choices[0]?.message?.content) {
-        const aiResponse = JSON.parse(response.data.choices[0].message.content);
+      if (response.data.candidates && response.data.candidates[0]?.content?.parts?.[0]?.text) {
+        const responseText = response.data.candidates[0].content.parts[0].text;
         
-        return {
-          aiScore: Math.min(100, Math.max(0, aiResponse.threatLevel || 0)),
-          confidence: 85,
-          threatType: aiResponse.threatType || 'unknown',
-          explanation: aiResponse.explanation || 'AI analysis completed',
-          verified: true
-        };
+        // Extract JSON from response (Gemini might add extra text)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const aiResponse = JSON.parse(jsonMatch[0]);
+          
+          return {
+            aiScore: Math.min(100, Math.max(0, aiResponse.threatLevel || 0)),
+            confidence: 85,
+            threatType: aiResponse.threatType || 'unknown',
+            explanation: aiResponse.explanation || 'AI analysis completed',
+            verified: true
+          };
+        }
       }
 
       return {
@@ -97,7 +101,7 @@ Format your response as valid JSON only, no other text.`;
       };
 
     } catch (error) {
-      console.error('AI threat analysis error:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Gemini threat analysis error:', error instanceof Error ? error.message : 'Unknown error');
       return {
         aiScore: 0,
         confidence: 0,
@@ -117,7 +121,6 @@ Format your response as valid JSON only, no other text.`;
     }
 
     try {
-      const encoded = encodeURIComponent(url);
       const response = await axios.get(
         `https://www.virustotal.com/api/v3/urls/${Buffer.from(url).toString('base64')}`,
         {
