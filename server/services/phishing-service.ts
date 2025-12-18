@@ -657,24 +657,24 @@ export class PhishingService {
 
   private generateDetails(indicators: PhishingAnalysis["indicators"]): string[] {
     const map: Record<string, string> = {
-      googleSafeBrowsingThreat: "🚨 CRITICAL: Google Safe Browsing identified this URL as malicious, phishing, or harmful",
+      googleSafeBrowsingThreat: "CRITICAL: Google Safe Browsing identified this URL as malicious, phishing, or harmful",
       ipBasedUrl: "URL uses IP address instead of a domain name",
       suspiciousSubdomains: "Suspicious subdomain pattern detected",
       shortUrl: "URL shortening service detected",
       suspiciousKeywords: "Contains phishing-related keywords",
       missingHttps: "Connection is not encrypted (no HTTPS)",
-      homoglyphDetected: "⚠️ Typosquatting or lookalike domain detected - may impersonate a legitimate site",
+      homoglyphDetected: "Typosquatting or lookalike domain detected - may impersonate a legitimate site",
       excessiveRedirects: "Multiple redirects detected in URL",
       suspiciousPort: "Non-standard or high port usage detected",
       suspiciousTLD: "Domain uses a high-risk or commonly abused top-level domain",
       excessiveLength: "URL is excessively long (often used to hide suspicious content)",
-      containsAtSymbol: "⚠️ URL contains @ symbol - may hide the real destination domain",
+      containsAtSymbol: "URL contains @ symbol - may hide the real destination domain",
       suspiciousSpecialChars: "Contains suspicious special characters or encoding patterns",
       randomStringPattern: "Domain name appears randomly generated",
       misleadingPath: "URL path contains misleading security-related terms",
-      brandImpersonation: "⚠️ CRITICAL: Domain appears to impersonate a well-known brand",
+      brandImpersonation: "CRITICAL: Domain appears to impersonate a well-known brand",
       hexEncoding: "Excessive hexadecimal encoding detected - may hide malicious content",
-      dataUri: "⚠️ Data URI detected - can embed malicious content directly",
+      dataUri: "Data URI detected - can embed malicious content directly",
     };
 
     const details = Object.entries(indicators)
