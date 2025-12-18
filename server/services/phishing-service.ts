@@ -1,5 +1,6 @@
 import { URL } from "url";
 import axios from "axios";
+import { AIThreatAnalyzer } from "./ai-threat-analyzer";
 
 export interface PhishingAnalysis {
   score: number;
@@ -34,6 +35,13 @@ export interface PhishingAnalysis {
     urlLength: number;
     subdomainCount: number;
     googleSafeBrowsingChecked: boolean;
+    virusTotalDetections?: number;
+    aiAnalysis?: {
+      enabled: boolean;
+      score: number;
+      confidence: number;
+      threatType: string;
+    };
   };
 }
 
@@ -152,6 +160,12 @@ const TYPOSQUATTING_PATTERNS: Record<string, string[]> = {
 };
 
 export class PhishingService {
+  private aiAnalyzer: AIThreatAnalyzer;
+
+  constructor() {
+    this.aiAnalyzer = new AIThreatAnalyzer();
+  }
+
   async analyzeUrl(urlString: string): Promise<PhishingAnalysis> {
     try {
       const url = new URL(urlString);
@@ -159,11 +173,28 @@ export class PhishingService {
       // Check Google Safe Browsing API
       const googleThreat = await this.checkGoogleSafeBrowsing(urlString);
       
+      // Check VirusTotal for real threat data
+      const vtCheck = await this.aiAnalyzer.checkVirusTotal(urlString);
+      
       const indicators = this.checkIndicators(url, urlString, googleThreat);
-      const score = this.calculateRiskScore(indicators, url.hostname, urlString);
+      let score = this.calculateRiskScore(indicators, url.hostname, urlString);
+      
+      // Get AI-powered threat analysis
+      const aiAnalysis = await this.aiAnalyzer.analyzeUrlWithAI(urlString, indicators);
+      
+      // Blend AI score with heuristic score for final assessment
+      if (aiAnalysis.verified) {
+        score = Math.round((score * 0.6) + (aiAnalysis.aiScore * 0.4));
+      }
+      
+      // If VirusTotal detected threats, increase severity
+      if (vtCheck.detected && vtCheck.detections > 0) {
+        score = Math.min(100, score + Math.min(20, vtCheck.detections * 2));
+      }
+      
       const risk = this.getRiskLevel(score);
       const details = this.generateDetails(indicators);
-      const recommendations = this.generateRecommendations(indicators, risk);
+      const recommendations = this.generateRecommendations(indicators, risk, aiAnalysis);
 
       return {
         score,
@@ -178,6 +209,13 @@ export class PhishingService {
           urlLength: urlString.length,
           subdomainCount: this.calculateSubdomainCount(url.hostname),
           googleSafeBrowsingChecked: googleThreat !== null,
+          virusTotalDetections: vtCheck.detections || undefined,
+          aiAnalysis: aiAnalysis.verified ? {
+            enabled: true,
+            score: aiAnalysis.aiScore,
+            confidence: aiAnalysis.confidence,
+            threatType: aiAnalysis.threatType
+          } : undefined,
         },
       };
     } catch {
@@ -653,13 +691,14 @@ export class PhishingService {
 
   private generateRecommendations(
     indicators: PhishingAnalysis["indicators"],
-    risk: PhishingAnalysis["risk"]
+    risk: PhishingAnalysis["risk"],
+    aiAnalysis?: any
   ): string[] {
     const recs: string[] = [];
 
     if (indicators.brandImpersonation || indicators.dataUri) {
       recs.push(
-        "⛔ DO NOT visit or interact with this URL - high risk of credential theft",
+        "DO NOT visit or interact with this URL - high risk of credential theft",
         "Do not enter any personal or financial information",
         "Report this URL to your IT security team immediately"
       );

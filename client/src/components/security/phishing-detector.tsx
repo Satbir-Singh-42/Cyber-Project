@@ -30,6 +30,7 @@ interface PhishingAnalysis {
     brandImpersonation: boolean;
     hexEncoding: boolean;
     dataUri: boolean;
+    googleSafeBrowsingThreat?: boolean;
   };
   details: string[];
   recommendations: string[];
@@ -39,6 +40,14 @@ interface PhishingAnalysis {
     analyzedAt: string;
     urlLength: number;
     subdomainCount: number;
+    googleSafeBrowsingChecked?: boolean;
+    virusTotalDetections?: number;
+    aiAnalysis?: {
+      enabled: boolean;
+      score: number;
+      confidence: number;
+      threatType: string;
+    };
   };
 }
 
@@ -147,6 +156,28 @@ export function PhishingDetector() {
                     <span>Risk Score</span>
                     <span className="font-mono" data-testid="text-risk-score">{analysis.score}/100</span>
                   </div>
+                  {analysis.metadata.aiAnalysis?.enabled && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span>AI Threat Score</span>
+                        <span className="font-mono text-accent">{analysis.metadata.aiAnalysis.score}/100</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Threat Type (AI)</span>
+                        <span className="font-mono text-xs">{analysis.metadata.aiAnalysis.threatType}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Confidence</span>
+                        <span className="font-mono">{analysis.metadata.aiAnalysis.confidence}%</span>
+                      </div>
+                    </>
+                  )}
+                  {analysis.metadata.virusTotalDetections && analysis.metadata.virusTotalDetections > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span>VirusTotal Detections</span>
+                      <span className="font-mono text-destructive">{analysis.metadata.virusTotalDetections}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span>Hostname</span>
                     <span className="font-mono text-xs truncate max-w-[200px]">{analysis.metadata.hostname}</span>
