@@ -16,7 +16,7 @@ function analyzePasswordClientSide(password: string): PasswordAnalysis {
     numbers: /\d/.test(password),
     upperCase: /[A-Z]/.test(password),
     lowerCase: /[a-z]/.test(password),
-    noDictionaryWords: !/(password|123456|qwerty|abc123|admin|login|welcome)/.test(password.toLowerCase())
+    noDictionaryWords: !/(password|123456|qwerty|abc123|admin|login|welcome|letmein|dragon|monkey|shadow|michael|sunshine)/.test(password.toLowerCase())
   };
 
   let score = 0;
@@ -49,12 +49,42 @@ function analyzePasswordClientSide(password: string): PasswordAnalysis {
                   score >= 20 ? 'weak' : 'very-weak';
 
   const suggestions: string[] = [];
-  if (!criteria.length) suggestions.push('Use at least 8 characters (12+ recommended)');
-  if (!criteria.upperCase) suggestions.push('Add uppercase letters (A-Z)');
-  if (!criteria.lowerCase) suggestions.push('Add lowercase letters (a-z)');
-  if (!criteria.numbers) suggestions.push('Include numbers (0-9)');
-  if (!criteria.specialChars) suggestions.push('Add special characters (!@#$%^&*)');
-  if (!criteria.noDictionaryWords) suggestions.push('Avoid common words and phrases');
+  
+  // Context-based length suggestion
+  if (!criteria.length) {
+    if (password.length < 6) {
+      suggestions.push(`Password too short (${password.length} chars). Aim for at least 12 characters for strong security`);
+    } else {
+      suggestions.push(`Increase length to at least 8 characters (currently ${password.length}). Recommended: 12+ characters`);
+    }
+  } else if (password.length < 12) {
+    suggestions.push(`Consider extending to 12+ characters (currently ${password.length}) for stronger security`);
+  }
+  
+  // Character type suggestions with examples
+  if (!criteria.upperCase) suggestions.push('Mix in uppercase letters for complexity (e.g., A-Z)');
+  if (!criteria.lowerCase) suggestions.push('Include lowercase letters to improve entropy (e.g., a-z)');
+  if (!criteria.numbers) {
+    suggestions.push('Add numbers for stronger protection (e.g., 0-9)');
+  }
+  if (!criteria.specialChars) {
+    suggestions.push('Include special characters like !@#$%^&* for maximum strength');
+  }
+  
+  // Dictionary words warning
+  if (!criteria.noDictionaryWords) {
+    const foundWords = /(password|123456|qwerty|abc123|admin|login|welcome|letmein|dragon|monkey|shadow|michael|sunshine)/.exec(password.toLowerCase());
+    if (foundWords) {
+      suggestions.push(`Remove common word "${foundWords[0]}" - easily guessed by attackers`);
+    } else {
+      suggestions.push('Avoid using common words, names, or sequential patterns');
+    }
+  }
+  
+  // Entropy-based suggestions
+  if (entropy < 40) {
+    suggestions.push('Combine different character types to increase randomness');
+  }
 
   const attempts = Math.pow(2, entropy) / 2;
   const seconds = attempts / 1e10;
