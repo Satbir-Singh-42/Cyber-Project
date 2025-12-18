@@ -1,4 +1,4 @@
-# 🛡️ CyberSec Toolkit
+# CyberSec Toolkit
 
 > **A comprehensive cybersecurity analysis suite** - Professional-grade security testing toolkit for password analysis, phishing detection, network scanning, and system monitoring.
 
@@ -9,318 +9,152 @@
 
 ---
 
-## 🌟 Project Overview
+## Project Overview
 
 **CyberSec Toolkit** is a full-stack web application designed to provide comprehensive security analysis tools in one unified platform. Built with modern technologies and security best practices, it offers:
 
-- 🔐 **Password Strength Analyzer** - Advanced entropy-based password security assessment
-- 🎣 **Phishing URL Detector** - Multi-layered heuristic phishing detection with 17+ indicators
-- 🌐 **Network Port Scanner** - Intelligent port scanning with service detection and banner grabbing
-- ⌨️ **Keylogger Detection System** - Process behavior analysis for malware detection
+- **Password Strength Analyzer** - Advanced entropy-based password security assessment
+- **Phishing URL Detector** - AI-powered threat analysis with Google Gemini and multi-layered heuristic detection
+- **Network Port Scanner** - Intelligent port scanning with service detection and banner grabbing
+- **Keylogger Detection System** - Process behavior analysis for malware detection
 
 ---
 
-## 🔬 Security Tools - Technical Approaches
+## Security Tools - Technical Overview
 
 ### 1. Password Strength Analyzer
 
-#### Technical Approach
-
-The Password Analyzer uses a multi-factor scoring algorithm combining entropy calculation, pattern detection, and heuristic analysis to provide comprehensive password security assessment.
-
-#### Implementation Methodology
-
-**A. Entropy Calculation**
-
-```
-Entropy (bits) = log₂(charset_size ^ password_length)
-
-Where charset_size is determined by:
-- Lowercase letters (a-z): 26
-- Uppercase letters (A-Z): 26
-- Numbers (0-9): 10
-- Special characters (!@#$%...): 32
-```
-
-**B. Scoring Algorithm (0-100 scale)**
-
-1. **Length Analysis** (0-25 points)
-
-   - ≥12 characters: 25 points
-   - ≥8 characters: 15 points
-   - ≥6 characters: 10 points
-   - <6 characters: Proportional scoring
-
-2. **Character Variety** (0-45 points)
-
-   - Uppercase letters: 10 points
-   - Lowercase letters: 10 points
-   - Numbers: 10 points
-   - Special characters: 15 points
-
-3. **Entropy Bonus** (0-20 points)
-
-   - ≥60 bits: 20 points
-   - ≥50 bits: 15 points
-   - ≥40 bits: 10 points
-
-4. **Pattern Penalties** (-10 to -20 points)
-   - Dictionary words: -20 points
-   - Repeated characters (3+): -10 points
-   - Sequential patterns (123, abc): -10 points
-   - Keyboard patterns (qwerty, asdf): -10 points
-
-**C. Dictionary & Pattern Detection**
-
-The system maintains comprehensive databases:
-
-- 40+ common passwords (password, 123456, qwerty, etc.)
-- 30+ dictionary words frequently used in passwords
-- Pattern recognition for:
-  - Sequential numbers: 012, 123, 234, etc.
-  - Sequential letters: abc, bcd, cde, etc.
-  - Keyboard patterns: qwer, asdf, zxcv, etc.
-  - Repeated characters: aaa, 111, etc.
-  - Alternating patterns
-
-**D. Crack Time Estimation**
-
-Using the calculated entropy, we estimate crack time based on:
-
-```
-Total Combinations = 2^entropy
-Average Attempts = Total Combinations / 2
-Crack Time = Average Attempts / Attack Speed
-
-Attack Scenarios:
-- Basic online: 1,000 attempts/second
-- Moderate offline: 1,000,000 attempts/second
-- Advanced rig: 1,000,000,000,000 attempts/second (1 trillion/sec)
-```
-
-**E. Real-time Feedback**
-
-- ✅ Instant analysis as user types
-- ✅ Visual strength indicator (color-coded progress bar)
-- ✅ Detailed criteria checklist with pass/fail status
-- ✅ Actionable improvement suggestions
-- ✅ Entropy visualization in bits
+**Advanced entropy-based password security assessment** with multi-factor scoring algorithm combining entropy calculation, pattern detection, and heuristic analysis.
 
 #### Key Features
 
-- Zero-latency client-side fallback for instant feedback
-- Server-side validation for enhanced security
-- No password storage - analysis only
-- Privacy-focused: passwords never logged or transmitted externally
+- Entropy calculation using charset analysis
+- 25-point length scoring system
+- 45-point character variety assessment
+- 20-point entropy bonus system
+- Pattern penalty detection (dictionary words, sequences, keyboard patterns)
+- Dictionary database with 40+ common passwords
+- Crack time estimation across three attack scenarios
+- Real-time feedback with visual strength indicator
+- Zero-latency client-side analysis with server-side validation
+
+#### Scoring Algorithm
+
+- **Length Analysis** (0-25 points): ≥12 chars = 25 pts, ≥8 chars = 15 pts, ≥6 chars = 10 pts
+- **Character Variety** (0-45 points): Uppercase, lowercase, numbers, special characters
+- **Entropy Bonus** (0-20 points): ≥60 bits = 20 pts, ≥50 bits = 15 pts, ≥40 bits = 10 pts
+- **Pattern Penalties** (-10 to -20 points): Dictionary words, repeated chars, sequences, keyboard patterns
+
+#### Risk Levels
+
+```
+0-30:    Weak          - High vulnerability
+31-50:   Fair          - Moderate risk
+51-70:   Strong        - Good security
+71-100:  Very Strong   - Excellent protection
+```
 
 ---
 
 ### 2. Phishing URL Detector
 
-#### Technical Approach
-
-Advanced heuristic-based phishing detection using 17 comprehensive indicators including typosquatting, brand impersonation, suspicious patterns, and structural analysis. Completely offline operation for maximum privacy.
-
-#### Implementation Methodology
-
-**A. Multi-Layer Analysis System**
-
-1. **Domain Structure Analysis**
-
-   - TLD (Top-Level Domain) validation
-   - Subdomain depth analysis
-   - Domain length checks
-   - Suspicious character detection (@, -, numbers in domain)
-
-2. **Typosquatting Detection**
-
-   - Levenshtein distance algorithm for similarity matching
-   - Character substitution detection (o→0, i→l, etc.)
-   - Homoglyph detection (unicode lookalike characters)
-   - Brand name database (40+ major brands)
-
-3. **URL Pattern Analysis**
-
-   - Suspicious keywords detection (50+ keywords)
-     - Account-related: login, signin, verify, update, secure
-     - Action-related: confirm, validate, urgent, suspend
-     - Brand impersonation: paypal, google, microsoft, bank
-   - IP address usage detection
-   - Port number analysis
-   - Path depth and complexity
-
-4. **Security Indicators**
-   - HTTPS vs HTTP protocol check
-   - Shortened URL detection (bit.ly, tinyurl, etc.)
-   - Suspicious TLD analysis (.tk, .ml, .ga, etc.)
-   - Free hosting service detection
-
-**B. Scoring Algorithm (0-100 scale)**
-
-Each indicator contributes to the final risk score:
-
-| Indicator                    | Weight | Example                  |
-| ---------------------------- | ------ | ------------------------ |
-| Typosquatting detected       | 35     | g00gle.com vs google.com |
-| Brand impersonation          | 25     | paypal-secure.com        |
-| Suspicious keywords (3+)     | 20     | verify-account-urgent    |
-| HTTP (no HTTPS)              | 15     | http://bank-login.com    |
-| IP address in URL            | 25     | http://192.168.1.1       |
-| Suspicious TLD               | 15     | example.tk               |
-| Excessive subdomains (4+)    | 20     | a.b.c.d.example.com      |
-| URL shortener                | 10     | bit.ly/xyz               |
-| Suspicious characters (@, -) | 10     | http://paypal@evil.com   |
-
-**C. Brand Detection Engine**
-
-Maintains database of legitimate brands and their variations:
-
-```
-Protected Brands:
-- Financial: paypal, stripe, visa, mastercard, amex
-- Tech: google, microsoft, apple, amazon, facebook
-- Services: netflix, spotify, adobe, zoom
-- Email: gmail, outlook, yahoo, protonmail
-
-Legitimate Subdomains:
-- accounts.google.com ✅
-- login.microsoft.com ✅
-- secure.paypal.com ✅
-```
-
-**D. Risk Classification**
-
-```
-Score Range    Risk Level    Action
-0-30          Low           Safe to proceed
-31-60         Medium        Exercise caution
-61-80         High          Likely phishing - avoid
-81-100        Critical      Definite phishing - block
-```
-
-**E. Detailed Reporting**
-
-For each analyzed URL, the system provides:
-
-- Overall risk score and level
-- List of detected indicators with explanations
-- Comparison with legitimate brand domains
-- Specific recommendations for user action
+**AI-powered threat analysis** using Google Gemini combined with multi-layered heuristic detection featuring 18+ security indicators for comprehensive phishing detection.
 
 #### Key Features
 
-- 17+ phishing indicators for comprehensive detection
-- Brand awareness with typosquatting detection
-- Privacy-focused: all analysis performed locally
-- Optional Google Safe Browsing API integration
-- Real-time analysis with detailed explanations
-- Educational feedback showing WHY a URL is suspicious
+- **Dual-Layer Analysis**: 60% heuristic scoring + 40% AI analysis blended score
+- **Google Gemini AI Integration**: Professional threat classification and context analysis
+- **Google Safe Browsing API**: Real threat data verification
+- **Multi-Indicator Detection**:
+  - Typosquatting and lookalike domain detection using Levenshtein distance
+  - Brand impersonation identification (40+ protected brands)
+  - Suspicious keyword detection (50+ keywords)
+  - IP address vs domain name validation
+  - HTTPS/SSL certificate verification
+  - Suspicious TLD analysis (high-risk domains)
+  - URL length and structure analysis
+  - Special character and encoding detection
+  - Homoglyph and Unicode attack detection
+
+#### AI-Powered Analysis
+
+When GOOGLE_API_KEY is configured:
+
+- Real-time threat assessment using Google Gemini API
+- Threat type classification (phishing, malware, spam, legitimate)
+- Confidence scoring with reasoning
+- Blended analysis for improved accuracy
+
+#### Risk Classification
+
+```
+0-30:    Low       - Safe to proceed
+31-60:   Medium    - Exercise caution
+61-80:   High      - Likely phishing - avoid
+81-100:  Critical  - Definite phishing - block
+```
+
+#### Legitimate Domain Database
+
+Protected brands and services: PayPal, Stripe, Google, Microsoft, Apple, Amazon, Facebook, Netflix, Adobe, Zoom, Slack, Discord, GitHub, and 30+ more.
+
+#### Key Features
+
+- Real-time URL analysis with detailed findings
+- AI confidence levels and threat type classification
+- Optional VirusTotal integration for malware detection
+- Professional reporting without false positives
+- Educational feedback explaining detection reasoning
+- Privacy-focused: no external logging or data collection
 
 ---
 
 ### 3. Network Port Scanner
 
+**Intelligent TCP port scanning** with adaptive concurrency, service fingerprinting, banner grabbing, and security risk assessment using Node.js native networking.
+
 #### Technical Approach
 
-Intelligent TCP port scanning with adaptive concurrency, service fingerprinting, banner grabbing, and security risk assessment using Node.js native networking capabilities.
+**Connection-Based Scanning**:
+- Attempt TCP connection to target:port
+- Port is OPEN if connection succeeds
+- Port is FILTERED if connection times out
+- Port is CLOSED if connection refused
 
-#### Implementation Methodology
+**Adaptive Concurrency**:
+- Minimum 10 concurrent connections
+- Maximum 50 concurrent connections
+- Scales based on port range size
 
-**A. Port Scanning Engine**
+**Service Detection**: 50+ common services with fingerprinting
+- FTP (21), SSH (22), Telnet (23), SMTP (25)
+- HTTP (80), HTTPS (443), POP3 (110), IMAP (143)
+- MSSQL (1433), MySQL (3306), RDP (3389), PostgreSQL (5432)
+- Redis (6379), MongoDB (27017), and more
 
-**1. Connection-Based Scanning**
-
-```javascript
-TCP Connect Scan:
-1. Attempt TCP connection to target:port
-2. If connection succeeds → Port is OPEN
-3. If connection times out → Port is FILTERED
-4. If connection refused → Port is CLOSED
-```
-
-**2. Adaptive Concurrency**
-
-```
-Concurrency = min(50, max(10, port_count / 10))
-
-Examples:
-- 100 ports → 10 concurrent scans
-- 500 ports → 50 concurrent scans
-- 1000 ports → 50 concurrent scans (capped)
-```
-
-**3. Timeout Strategy**
-
-- Initial connection: 2000ms (2 seconds)
-- Banner grab: 3000ms (3 seconds)
-- Respectful delays: 100ms between chunks
-
-**B. Service Detection**
-
-Comprehensive service database (50+ common services):
-
-| Port  | Service    | Description            | Risk Level |
-| ----- | ---------- | ---------------------- | ---------- |
-| 21    | FTP        | File Transfer Protocol | HIGH       |
-| 22    | SSH        | Secure Shell           | MEDIUM     |
-| 23    | Telnet     | Unencrypted terminal   | CRITICAL   |
-| 25    | SMTP       | Email server           | MEDIUM     |
-| 80    | HTTP       | Web server             | LOW        |
-| 443   | HTTPS      | Secure web server      | LOW        |
-| 1433  | MSSQL      | Microsoft SQL Server   | HIGH       |
-| 3306  | MySQL      | MySQL Database         | HIGH       |
-| 3389  | RDP        | Remote Desktop         | HIGH       |
-| 5432  | PostgreSQL | PostgreSQL Database    | HIGH       |
-| 6379  | Redis      | Redis Cache            | HIGH       |
-| 8080  | HTTP-Alt   | Alternative HTTP       | MEDIUM     |
-| 27017 | MongoDB    | MongoDB Database       | HIGH       |
-
-**C. Banner Grabbing**
-
-Service-specific probes for version detection:
-
-```
-FTP (21):     "HELP\r\n"
-SSH (22):     "SSH-2.0-Scanner\r\n"
-SMTP (25):    "EHLO scanner\r\n"
-HTTP (80):    "GET / HTTP/1.0\r\n\r\n"
-POP3 (110):   "USER scanner\r\n"
-IMAP (143):   "A001 CAPABILITY\r\n"
-```
-
-**D. Security Analysis**
-
-Automatic risk assessment for open ports:
-
-- Identifies dangerous services (Telnet, FTP, RDP)
-- Detects vulnerable versions (SSH-1.x, anonymous FTP)
-- Flags high-risk database exposure
-- Provides security recommendations
-
-**E. Port Range Parsing**
-
-Flexible input formats:
-
-```
-Single port:    "80"
-Multiple ports: "80,443,8080"
-Port range:     "1-1000"
-Mixed:          "22,80-100,443,8080-8090"
-```
+**Banner Grabbing**:
+- Service-specific probes for version detection
+- FTP, SSH, SMTP, HTTP, POP3, IMAP protocol support
+- Security vulnerability identification
 
 #### Scanning Modes
 
-**1. Full Scan**
-
-- Custom port range
+**Full Scan**:
+- Custom port ranges
 - User-defined targets
 - Comprehensive analysis
 
-**2. Quick Scan**
-
+**Quick Scan**:
 - Pre-configured 30+ common ports
 - Optimized for speed
-- Most critical services
+- Most critical services only
+
+#### Port Range Formats
+
+- Single port: `80`
+- Multiple ports: `80,443,8080`
+- Port ranges: `1-1000`
+- Mixed formats: `22,80-100,443,8080-8090`
 
 #### Key Features
 
@@ -328,145 +162,53 @@ Mixed:          "22,80-100,443,8080-8090"
 - Service fingerprinting and version detection
 - Banner grabbing for detailed information
 - Security risk classification
-- Private IP / localhost detection
+- Private IP and localhost detection
 - Network-friendly with rate limiting
 - Support for both IP addresses and domain names
+- Timeout strategy: 2s connection, 3s banner grab, 100ms chunk delays
 
 ---
 
 ### 4. Keylogger Detection System
 
-#### Technical Approach
+**Process behavior analysis** using heuristic pattern matching, entropy calculation, and risk scoring to identify potentially malicious keylogging software. Multi-platform support (Windows, Linux, macOS).
 
-Process behavior analysis using heuristic pattern matching, entropy calculation, and risk scoring to identify potentially malicious keylogging software. Multi-platform support (Windows, Linux, macOS).
-
-#### Implementation Methodology
-
-**A. Process Enumeration**
-
-**Windows:**
-
-```
-Command: wmic process get Name,ProcessId,CommandLine,PageFileUsage,WorkingSetSize /format:csv
-Retrieves: Process name, PID, full command line, memory usage
-```
-
-**Linux/macOS:**
-
-```
-Command: ps aux
-Retrieves: User, PID, CPU%, Memory%, full command, resource usage
-```
-
-**B. Risk Analysis Algorithm**
+#### Analysis Algorithms
 
 **1. Keyword Detection** (25 points per match)
-
-```
-Suspicious Keywords Database (35+ terms):
 - Direct indicators: keylog, keystroke, capture, hook
 - Monitoring: monitor, record, spy, stealth
 - Malware terms: trojan, rat, backdoor, rootkit
 - Obfuscation: hidden, invisible, bypass
-```
 
 **2. Process Name Analysis** (40 points)
-
-```
-Known Malicious Patterns:
-- keylogger, spyware, malware, rootkit
-- remote_access, rat, trojan, virus
-```
+- Known malicious patterns
+- Legitimate process verification
 
 **3. System Process Mimicry** (20 points)
-
-```
-Illegitimate system-like names:
-- svchost.exe (in wrong location)
-- csrss.exe (not from System32)
-- lsass.exe (suspicious path)
-- winlogon.exe (wrong directory)
-```
+- Illegitimate system-like names
+- Path validation
 
 **4. File Location Analysis** (15 points)
-
-```
-Suspicious Indicators:
-- .tmp extension
-- Temp directory execution
+- Temporary directory execution
 - Cache folder execution
 - Missing path information
-```
 
 **5. Resource Usage Analysis** (10 points)
-
-```
-High CPU usage (>50%): Potential monitoring activity
-High Memory usage: Possible data buffering
-```
+- High CPU usage (>50%)
+- High memory usage indicators
 
 **6. Name Entropy Analysis** (15 points)
+- Shannon entropy calculation
+- High entropy (>4.2) suggests random/obfuscated names
+
+#### Risk Classification
 
 ```
-Shannon Entropy Calculation:
-H(X) = -Σ P(xi) * log₂(P(xi))
-
-High entropy (>4.2) suggests random/obfuscated names:
-- Good: chrome.exe (entropy: 2.5)
-- Bad: xk7f92hn.exe (entropy: 4.8)
-```
-
-**C. Legitimate Process Whitelist**
-
-Protected processes (50+ entries):
-
-```
-System: explorer.exe, csrss.exe, lsass.exe, services.exe
-Browsers: chrome.exe, firefox.exe, msedge.exe, safari.exe
-Development: code.exe, node.exe, python.exe, java.exe
-Common: teams.exe, slack.exe, discord.exe, zoom.exe
-```
-
-**D. Overall Risk Classification**
-
-```
-Risk Score Aggregation:
-- Calculate individual process risk scores
-- Sum total risk across all suspicious processes
-- Determine maximum risk score
-
-Risk Levels:
-Low:      0-30 score  OR  0 suspicious processes
-Medium:   31-60 score  OR  total risk 60-100
-High:     61-80 score  OR  total risk 100-150
-Critical: 81+ score   OR  total risk 150+
-```
-
-**E. Recommendations Engine**
-
-Context-aware recommendations based on risk level:
-
-```
-Critical:
-- Immediate process termination
-- Network disconnection
-- Full antivirus scan
-- Security team notification
-
-High:
-- Immediate investigation
-- System isolation consideration
-- Comprehensive malware scan
-
-Medium:
-- Close monitoring
-- Process signature verification
-- Manual inspection
-
-Low:
-- Routine monitoring
-- Whitelist management
-- Regular scans
+Low:      0-30 score   - 0 suspicious processes
+Medium:   31-60 score  - Total risk 60-100
+High:     61-80 score  - Total risk 100-150
+Critical: 81+ score    - Total risk 150+
 ```
 
 #### Key Features
@@ -475,61 +217,52 @@ Low:
 - Real-time process scanning
 - Behavior-based detection (not signature-based)
 - Risk scoring with detailed reasoning
-- Safe process termination capability
-- Auto-refresh monitoring (30-second intervals)
-- Low false-positive rate with whitelist
+- Legitimate process whitelist (50+ entries)
+- Low false-positive rate
+- Auto-refresh monitoring
 - Detailed process information (PID, user, resources)
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-### Frontend Technologies
+### Frontend
 
 ```
 React 18.3.1
-├── TypeScript 5.6.3               # Type safety and better DX
-├── Vite 5.4.19                    # Ultra-fast build tool
-├── Tailwind CSS 3.4.17            # Utility-first styling
-├── Radix UI                       # Accessible component primitives
-│   ├── @radix-ui/react-dialog
-│   ├── @radix-ui/react-dropdown-menu
-│   ├── @radix-ui/react-tabs
-│   └── [20+ components]
-├── TanStack Query 5.60.5          # Server state management
-├── Wouter 3.3.5                   # Lightweight routing
-├── Framer Motion 11.13.1          # Animations
-├── Lucide React 0.453.0           # Icon library
-└── React Hook Form 7.55.0         # Form management
+├── TypeScript 5.6.3
+├── Vite 5.4.19
+├── Tailwind CSS 3.4.17
+├── Radix UI Components (20+)
+├── TanStack Query 5.60.5
+├── Wouter 3.3.5 (Routing)
+├── Lucide React 0.453.0 (Icons)
+└── React Hook Form 7.55.0 (Forms)
 ```
 
-### Backend Technologies
+### Backend
 
 ```
-Node.js (18+)
-└── Express 4.21.2                 # Web framework
-    ├── TypeScript 5.6.3           # Type safety
-    ├── Express Validator 7.2.1    # Input validation
-    ├── Helmet 8.1.0               # Security headers
-    ├── Express Rate Limit 8.1.0   # Rate limiting
-    ├── Express Session 1.18.1     # Session management
-    └── Zod 3.24.2                 # Schema validation
+Node.js 18+
+└── Express 4.21.2
+    ├── TypeScript 5.6.3
+    ├── Express Validator 7.2.1
+    ├── Helmet 8.1.0
+    ├── Express Rate Limit 8.1.0
+    ├── Axios 1.12.2 (HTTP requests)
+    └── Zod 3.24.2 (Schema validation)
 ```
 
 ### Security Libraries
 
-```
-Cryptography & Security
-├── bcrypt 6.0.0                   # Password hashing
-├── Helmet                         # Security headers
-├── Express Rate Limit             # DDoS protection
-├── Express Validator              # Input sanitization
-└── Zod                            # Runtime type checking
-```
+- Helmet - Security headers
+- Express Rate Limit - DDoS protection
+- Express Validator - Input sanitization
+- Zod - Runtime type checking
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
@@ -540,17 +273,17 @@ Cryptography & Security
 ### Step-by-Step Installation
 
 ```bash
-# 1. Clone the repository
+# Clone the repository
 git clone <repository-url>
 cd cybersec-toolkit
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Start development server
+# Start development server
 npm run dev
 
-# 4. Open in browser
+# Open in browser
 # Navigate to http://localhost:5000
 ```
 
@@ -564,13 +297,16 @@ npm run build
 npm start
 ```
 
-### Environment Variables (Optional)
+### Environment Variables
 
 Create a `.env` file for optional configurations:
 
 ```env
-# Google Safe Browsing API (optional)
+# Google API Key for Gemini AI and Safe Browsing (recommended)
 GOOGLE_API_KEY=your_api_key_here
+
+# VirusTotal API (optional) - for advanced phishing detection
+VIRUSTOTAL_API_KEY=your_virustotal_key
 
 # Server configuration
 PORT=5000
@@ -579,7 +315,29 @@ NODE_ENV=production
 
 ---
 
-## 📡 API Documentation
+## Setting Up Your Google API Key
+
+### Step 1: Create a Google Cloud Project
+1. Visit [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable the "Generative Language API" for Gemini
+4. Create an API key from the credentials page
+
+### Step 2: Add to Replit
+1. Open the Secrets tool in Replit sidebar
+2. Click "Add"
+3. Key: `GOOGLE_API_KEY`
+4. Value: Paste your API key
+5. Click "Add Secret"
+
+### Step 3: Verify Configuration
+- Restart your application
+- Test the Phishing Detector
+- AI analysis will activate when a URL is analyzed
+
+---
+
+## API Documentation
 
 ### Base URL
 
@@ -596,7 +354,7 @@ Production:  https://your-domain.com/api/security
 POST /password-analysis
 Content-Type: application/json
 
-Request Body:
+Request:
 {
   "password": "string (1-256 chars)"
 }
@@ -610,8 +368,7 @@ Response:
     "specialChars": true,
     "numbers": true,
     "upperCase": true,
-    "lowerCase": true,
-    "noDictionaryWords": true
+    "lowerCase": true
   },
   "entropy": 68.5,
   "suggestions": [],
@@ -625,19 +382,28 @@ Response:
 POST /phishing-analysis
 Content-Type: application/json
 
-Request Body:
+Request:
 {
   "url": "https://example.com"
 }
 
 Response:
 {
-  "url": "https://example.com",
-  "isPhishing": false,
-  "riskScore": 15,
-  "riskLevel": "low",
-  "indicators": [...],
-  "recommendations": [...]
+  "score": 15,
+  "risk": "low",
+  "indicators": {...},
+  "details": ["Analysis details..."],
+  "recommendations": ["Recommendations..."],
+  "metadata": {
+    "hostname": "example.com",
+    "tld": "com",
+    "aiAnalysis": {
+      "enabled": true,
+      "score": 12,
+      "confidence": 85,
+      "threatType": "legitimate"
+    }
+  }
 }
 ```
 
@@ -647,7 +413,7 @@ Response:
 POST /port-scan
 Content-Type: application/json
 
-Request Body:
+Request:
 {
   "target": "scanme.nmap.org",
   "portRange": "1-1000"
@@ -665,12 +431,31 @@ Response:
       "banner": "SSH-2.0-OpenSSH_7.4"
     }
   ],
-  "scanDuration": 45000,
+  "scanDuration": 45000
+}
+```
+
+#### 4. Quick Port Scan
+
+```http
+POST /port-scan-quick
+Content-Type: application/json
+
+Request:
+{
+  "target": "example.com"
+}
+
+Response:
+{
+  "target": "example.com",
+  "commonPorts": 30,
+  "openPorts": [...],
   "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
-#### 4. Keylogger Scan
+#### 5. Keylogger Scan
 
 ```http
 POST /keylogger-scan
@@ -697,83 +482,116 @@ Response:
 }
 ```
 
-```http
+---
 
-Request Body:
-{
-  "directory": "/path/to/directory",
-  "recursive": true
-}
-```
+## Features Highlights
 
-## 🎓 Presentation Guide for Panel Members
+### Password Strength Analyzer
 
-### Key Highlights to Present
+- Real-time entropy calculation
+- Multi-factor strength assessment
+- Dictionary and pattern detection
+- Crack time estimation
+- Visual strength indicator
+- Privacy-first: no password storage
 
-1. **Comprehensive Security Suite**
+### Phishing URL Detector
 
-   - 5 integrated security tools in one platform
-   - Real-world applicable solutions
-   - Educational and practical value
+- AI-powered with Google Gemini API
+- 18+ security indicators
+- Brand impersonation detection
+- Typosquatting detection
+- Google Safe Browsing integration
+- Optional VirusTotal support
+- Professional reporting
+- No external logging
 
-2. **Technical Excellence**
+### Network Port Scanner
 
-   - Full-stack TypeScript implementation
-   - Modern architecture (React + Express)
-   - Industry-standard security practices
-   - Clean, maintainable codebase
+- Adaptive concurrency control
+- Service fingerprinting
+- Banner grabbing
+- Security risk assessment
+- Quick and full scan modes
+- Domain and IP support
+- Network-friendly rate limiting
 
-3. **Advanced Algorithms**
+### Keylogger Detection
 
-   - Entropy-based password analysis
-   - Heuristic phishing detection
-   - Process behavior analysis
-   - Cryptographic file verification
-
-4. **User Experience**
-
-   - Intuitive interface design
-   - Real-time feedback
-   - Detailed explanations
-   - Educational recommendations
-
-5. **Security & Privacy**
-   - Local-first processing
-   - No data collection
-   - Responsible disclosure practices
-   - Ethical use guidelines
-
-### Demo Flow Recommendation
-
-1. **Start with Password Analyzer** (Most visual)
-
-   - Show weak password → poor score
-   - Show strong password → excellent score
-   - Highlight real-time feedback
-
-2. **Phishing Detector** (High impact)
-
-   - Test legitimate URL → safe result
-   - Test suspicious URL → high-risk detection
-   - Explain detection techniques
-
-3. **Port Scanner** (Technical depth)
-
-   - Quick scan demonstration
-   - Service detection showcase
-   - Security assessment explanation
-
-   - Initialize baseline
-   - Modify a file
-   - Detect changes
-
-4. **Architecture Overview**
-   - Show system diagram
-   - Explain technology choices
-   - Discuss scalability
+- Process behavior analysis
+- Entropy-based detection
+- Multi-platform support
+- Real-time scanning
+- Low false-positive rate
+- Detailed risk reporting
+- Legitimate process whitelist
 
 ---
 
-## 📄 License
+## Security & Privacy
+
+- Local-first processing where possible
+- No personal data collection
+- No external logging of sensitive information
+- Encrypted secure transmission
+- HTTPS enforcement
+- Input validation and sanitization
+- Rate limiting and DDoS protection
+- Helmet security headers enabled
+
+---
+
+## Use Cases
+
+**For IT Security Professionals**:
+- Network security assessment
+- Threat detection and analysis
+- Security awareness training
+- Incident response support
+
+**For Developers**:
+- Security testing toolkit
+- Password validation integration
+- URL safety verification
+- System monitoring
+
+**For Educational Purposes**:
+- Learn cybersecurity concepts
+- Understand threat detection
+- Study algorithm implementation
+- Practice security analysis
+
+---
+
+## Browser Support
+
+- Chrome/Edge (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Modern mobile browsers
+
+---
+
+## Performance Considerations
+
+- Frontend: React with Vite for fast builds
+- Backend: Express with Express Rate Limit
+- Caching: TanStack Query for efficient data management
+- Security: Helmet for response headers
+- Validation: Zod for runtime type checking
+
+---
+
+## License
 
 MIT License - Free for educational and commercial use.
+
+---
+
+## Support & Contact
+
+For issues, feature requests, or security concerns, please open an issue in the repository.
+
+---
+
+**CyberSec Toolkit** - Professional Security Analysis Made Simple
