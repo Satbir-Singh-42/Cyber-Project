@@ -53,7 +53,7 @@ Provide a JSON response with:
 Respond ONLY with valid JSON, no other text.`;
 
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent`,
         {
           contents: [
             {
@@ -72,6 +72,7 @@ Respond ONLY with valid JSON, no other text.`;
         {
           headers: {
             "Content-Type": "application/json",
+            "x-goog-api-key": this.geminiApiKey,
           },
           timeout: 10000,
         }
