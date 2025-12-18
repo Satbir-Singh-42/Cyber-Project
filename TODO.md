@@ -1,3 +1,0 @@
-- [ ] Remove unused dependencies from package.json
-- [ ] Remove unused devDependencies from package.json
-- [ ] Run npm install to update package-lock.json
