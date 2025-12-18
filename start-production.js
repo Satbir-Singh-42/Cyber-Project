@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Production startup script for SolarSense AI
+ * Production startup script
  * Handles environment validation and server initialization
  */
 
@@ -39,7 +39,7 @@ if (!apiKey || apiKey.length < 30) {
 
 
 console.log("✅ Environment validation passed");
-console.log("🚀 Starting SolarSense AI production server...");
+console.log("🚀 Starting production server...");
 
 // Set production environment
 process.env.NODE_ENV = "production";
