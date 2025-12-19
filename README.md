@@ -242,23 +242,11 @@ AI analysis provides:
 4. Go to "Credentials" → "Create Credentials" → "API Key"
 5. Copy the API key
 
-#### Step 2: Add to Replit (If using Replit)
-1. Click "Tools" or "Secrets" on the left panel
-2. Click "Add"
-3. **Key:** `GOOGLE_API_KEY`
-4. **Value:** Paste your API key
-5. Click "Add Secret"
 
-#### Step 3: Restart and Test
+#### Step 2: Restart and Test
 1. Restart the application
 2. Test the Phishing Detector
 3. You should now see "AI Analysis Enabled" in the results
-
-#### Step 4: (Optional) VirusTotal Integration
-For advanced malware detection:
-1. Get API key from [VirusTotal](https://www.virustotal.com/gui/home/upload)
-2. Add as `VIRUSTOTAL_API_KEY` secret
-3. Restart and test
 
 ---
 
